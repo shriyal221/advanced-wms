@@ -1,0 +1,41 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: advanced-warehouse-management
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wms}
+    username: ${DB_USERNAME:wms}
+    password: ${DB_PASSWORD:wms}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${SERVER_PORT:8080}
+
+security:
+  jwt:
+    issuer: ${JWT_ISSUER:infotact-wms}
+    secret: ${WMS_JWT_SECRET:dev-only-change-me-to-a-strong-32-byte-secret}
+    expires-minutes: ${JWT_EXPIRES_MINUTES:480}
+
+seed:
+  admin-password: ${SEED_ADMIN_PASSWORD:admin123}
+  operator-password: ${SEED_OPERATOR_PASSWORD:operator123}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}

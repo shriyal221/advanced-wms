@@ -1,0 +1,58 @@
+### Login as admin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### Create a product
+POST http://localhost:8080/api/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "SKU-TOTE-300",
+  "name": "Reusable Picking Tote",
+  "description": "Blue tote used by warehouse pickers.",
+  "unitVolume": 3,
+  "reorderThreshold": 25
+}
+
+### Receive stock
+POST http://localhost:8080/api/inventory/receive
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 50,
+  "reference": "ASN-0001"
+}
+
+### Create order
+POST http://localhost:8080/api/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "lines": [
+    {
+      "productId": 1,
+      "quantity": 5
+    }
+  ]
+}
+
+### Move order through fulfillment
+POST http://localhost:8080/api/orders/1/start-picking
+Authorization: Bearer {{token}}
+
+###
+POST http://localhost:8080/api/orders/1/pack
+Authorization: Bearer {{token}}
+
+###
+POST http://localhost:8080/api/orders/1/ship
+Authorization: Bearer {{token}}

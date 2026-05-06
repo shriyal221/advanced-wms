@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-wms}
+      POSTGRES_USER: ${DB_USERNAME:-wms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-wms}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-wms} -d ${DB_NAME:-wms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-wms}
+      DB_USERNAME: ${DB_USERNAME:-wms}
+      DB_PASSWORD: ${DB_PASSWORD:-wms}
+      WMS_JWT_SECRET: ${WMS_JWT_SECRET:-replace-with-a-minimum-32-byte-secret-value}
+      JWT_EXPIRES_MINUTES: ${JWT_EXPIRES_MINUTES:-480}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123}
+      SEED_OPERATOR_PASSWORD: ${SEED_OPERATOR_PASSWORD:-operator123}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:
