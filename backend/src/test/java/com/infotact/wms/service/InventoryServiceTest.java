@@ -44,7 +44,7 @@ class InventoryServiceTest {
         ));
 
         assertThat(response.receivedQuantity()).isEqualTo(10);
-        assertThat(response.binCode()).isEqualTo("BIN-A01-001");
+        assertThat(response.binCode()).isEqualTo("BIN-LKO-01");
         assertThat(inventoryItemRepository.totalOnHand(product.getId())).isEqualTo(10);
     }
 }
