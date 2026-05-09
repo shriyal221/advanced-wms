@@ -4,6 +4,9 @@ import com.infotact.wms.domain.Aisle;
 import com.infotact.wms.domain.AppUser;
 import com.infotact.wms.domain.Product;
 import com.infotact.wms.domain.ProductCategory;
+import com.infotact.wms.domain.PurchaseOrder;
+import com.infotact.wms.domain.PurchaseOrderItem;
+import com.infotact.wms.domain.PurchaseOrderStatus;
 import com.infotact.wms.domain.Role;
 import com.infotact.wms.domain.StorageBin;
 import com.infotact.wms.domain.Supplier;
@@ -13,11 +16,14 @@ import com.infotact.wms.repository.AisleRepository;
 import com.infotact.wms.repository.AppUserRepository;
 import com.infotact.wms.repository.ProductCategoryRepository;
 import com.infotact.wms.repository.ProductRepository;
+import com.infotact.wms.repository.PurchaseOrderRepository;
 import com.infotact.wms.repository.StorageBinRepository;
 import com.infotact.wms.repository.SupplierRepository;
 import com.infotact.wms.repository.WarehouseRepository;
 import com.infotact.wms.repository.ZoneRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +42,7 @@ public class DataSeeder {
         ProductRepository productRepository,
         ProductCategoryRepository productCategoryRepository,
         SupplierRepository supplierRepository,
+        PurchaseOrderRepository purchaseOrderRepository,
         PasswordEncoder passwordEncoder,
         @Value("${seed.admin-password}") String adminPassword,
         @Value("${seed.operator-password}") String operatorPassword
@@ -124,6 +131,24 @@ public class DataSeeder {
             }
             if (!supplierRepository.existsByNameIgnoreCase("Infotact Supply Co.")) {
                 supplierRepository.save(new Supplier("Infotact Supply Co.", "Bengaluru, Karnataka", "supply@infotact.local", "+91 90000 00003"));
+            }
+
+            if (purchaseOrderRepository.count() == 0) {
+                Supplier supplier = supplierRepository.findAll().get(0);
+                Product labels = productRepository.findBySku("SKU-LABEL-100").orElseThrow();
+                Product scanners = productRepository.findBySku("SKU-SCANNER-200").orElseThrow();
+
+                // Order 1: Ordered
+                PurchaseOrder po1 = new PurchaseOrder(supplier, warehouse, Instant.now().plus(7, ChronoUnit.DAYS));
+                po1.addItem(new PurchaseOrderItem(labels, 500));
+                po1.addItem(new PurchaseOrderItem(scanners, 10));
+                purchaseOrderRepository.save(po1);
+
+                // Order 2: Received
+                PurchaseOrder po2 = new PurchaseOrder(supplier, warehouse, Instant.now().minus(2, ChronoUnit.DAYS));
+                po2.addItem(new PurchaseOrderItem(labels, 1000));
+                po2.markReceived();
+                purchaseOrderRepository.save(po2);
             }
         };
     }
