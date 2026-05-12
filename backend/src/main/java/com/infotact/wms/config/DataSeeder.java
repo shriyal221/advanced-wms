@@ -129,6 +129,40 @@ public class DataSeeder {
                     warehouse
                 ));
             }
+
+            // Add 10 Professional Products
+            String[][] professionalProducts = {
+                {"SKU-TK-100", "Industrial Tool Kit", "BC-TK-100", "Professional grade tool kit for industrial maintenance and repair operations.", "5", "10", "12500", "15.5", "Industrial Tools"},
+                {"SKU-PR-500", "Heavy Duty Pallet Rack", "BC-PR-500", "High-capacity steel storage rack designed for heavy industrial pallets.", "20", "5", "28500", "120.0", "Warehouse Equipment"},
+                {"SKU-EF-1000", "Electric Forklift", "BC-EF-1000", "Advanced electric forklift with 3000kg lifting capacity and fast charging.", "100", "2", "1250000", "3200.0", "Material Handling"},
+                {"SKU-SG-200", "Safety Goggles Pro", "BC-SG-200", "Anti-fog, scratch-resistant professional safety goggles for floor workers.", "1", "50", "850", "0.25", "Safety Gear"},
+                {"SKU-AC-50", "Industrial Air Compressor", "BC-AC-50", "Powerful 50L air compressor for pneumatic tools and machinery.", "15", "5", "42000", "35.0", "Industrial Tools"},
+                {"SKU-HPT-25", "Hydraulic Pallet Jack", "BC-HPT-25", "Heavy-duty hydraulic hand pallet truck with 2500kg capacity.", "40", "8", "22000", "85.0", "Material Handling"},
+                {"SKU-SB-100", "Safety Barrier Guard", "BC-SB-100", "High-visibility steel safety barrier for protecting personnel and equipment.", "25", "10", "9500", "25.0", "Safety Gear"},
+                {"SKU-DWS-300", "Digital Floor Scale", "BC-DWS-300", "Industrial digital floor scale with 300kg capacity and precision sensors.", "12", "4", "15500", "18.0", "Warehouse Equipment"},
+                {"SKU-IVF-24", "High-Velocity Fan", "BC-IVF-24", "24-inch industrial-grade high-velocity fan for warehouse ventilation.", "8", "10", "8900", "14.0", "Warehouse Equipment"},
+                {"SKU-FE-009", "ABC Fire Extinguisher", "BC-FE-009", "Professional 9kg ABC dry powder fire extinguisher for industrial safety.", "6", "20", "4200", "16.0", "Safety Gear"}
+            };
+
+            for (String[] pData : professionalProducts) {
+                if (!productRepository.existsBySku(pData[0])) {
+                    final String catName = pData[8];
+                    ProductCategory category = productCategoryRepository.findAllWithDetails()
+                        .stream()
+                        .filter(c -> c.getName().equalsIgnoreCase(catName) && c.getWarehouse().getId().equals(warehouse.getId()))
+                        .findFirst()
+                        .orElseGet(() -> productCategoryRepository.save(new ProductCategory(catName, warehouse, null, zone)));
+                    
+                    productRepository.save(new Product(
+                        pData[0], pData[1], pData[2], pData[3],
+                        Integer.parseInt(pData[4]),
+                        new BigDecimal(pData[5]),
+                        new BigDecimal(pData[6]),
+                        Double.parseDouble(pData[7]),
+                        category, warehouse
+                    ));
+                }
+            }
             if (!supplierRepository.existsByNameIgnoreCase("Infotact Supply Co.")) {
                 supplierRepository.save(new Supplier("Infotact Supply Co.", "Bengaluru, Karnataka", "supply@infotact.local", "+91 90000 00003"));
             }
