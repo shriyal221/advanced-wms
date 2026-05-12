@@ -99,6 +99,11 @@ textarea {
   }
 }
 
+@keyframes pulse {
+  0% { transform: scale(1) translate(0, 0); opacity: 0.1; }
+  100% { transform: scale(1.3) translate(30px, 30px); opacity: 0.2; }
+}
+
 /* Controls */
 button {
   align-items: center;
@@ -172,6 +177,7 @@ td {
   padding: 14px 12px;
   text-align: left;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 th {
@@ -194,27 +200,88 @@ tbody tr:hover {
 /* Login Shell */
 .login-shell {
   align-items: center;
-  background:
-    radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.15), transparent 25%),
-    var(--bg-gradient);
+  background: 
+    linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)),
+    url('./assets/login-bg.png') center/cover no-repeat;
   display: flex;
   justify-content: center;
   min-height: 100vh;
   padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-shell::before,
+.login-shell::after {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-shell::before {
+  background: var(--primary);
+  top: -150px;
+  left: -150px;
+  animation: pulse 12s infinite alternate;
+}
+
+.login-shell::after {
+  background: var(--secondary);
+  bottom: -150px;
+  right: -150px;
+  animation: pulse 18s infinite alternate-reverse;
 }
 
 .login-panel {
-  background: var(--panel-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-  max-width: 420px;
-  padding: 40px;
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.6);
+  max-width: 440px;
+  padding: 48px;
   width: 100%;
-  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 1;
+}
+
+.login-panel .brand-line h1 {
+  color: #ffffff;
+}
+
+.login-panel .brand-line p {
+  color: var(--secondary);
+  opacity: 0.9;
+}
+
+.login-panel .login-form label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.login-panel input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  backdrop-filter: blur(4px);
+}
+
+.login-panel input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+}
+
+.login-panel button {
+  margin-top: 8px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  font-weight: 600;
+  height: 48px;
 }
 
 .brand-line {
@@ -473,6 +540,7 @@ tbody tr:hover {
   padding: 24px;
   display: flex;
   flex-direction: column;
+  overflow-x: auto;
 }
 
 .panel.wide {

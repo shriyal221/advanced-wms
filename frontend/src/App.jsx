@@ -637,7 +637,7 @@ const Catalog = memo(function Catalog(props) {
           </form>
         </section>
       )}
-      <section className="panel wide">
+      <section className={isAdmin ? "panel" : "panel wide"}>
         <PanelTitle icon={QrCode} title="Product Catalog" />
         <table>
           <thead>
