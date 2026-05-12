@@ -63,7 +63,7 @@ scripts\run-backend-local.cmd
 scripts\run-frontend-local.cmd
 ```
 
-The helper backend script uses the `local` H2 profile and port `8081`, which is useful when PostgreSQL/Docker are unavailable or port `8080` is already occupied.
+The helper backend script uses the `local` profile, PostgreSQL database `wms`, and backend port `8081`. The frontend helper points Vite to `http://localhost:8081/api`.
 
 ## Environment
 
@@ -91,3 +91,27 @@ Example requests are in `docs/api.http`.
 ## Evaluation Notes
 
 The PDF requires continuous GitHub activity across four weeks. This repository is ready for that workflow, but the commit history itself should be built honestly over time using feature branches and pull requests. The included CI runs `mvn -B clean test` for the backend and a production build for the frontend.
+
+## PDF Requirement Alignment
+
+- Project scope: Project 1, Enterprise Warehouse Management System.
+- Warehouse model: `Warehouse -> Zone -> Aisle -> StorageBin`.
+- Core entities: `Product`, `Warehouse`, `StorageBin`, `InventoryItem`, orders, users, suppliers, product categories, and purchase orders.
+- Receiving and putaway: transactional service assigns inbound stock to bins with available capacity.
+- Inventory integrity: pessimistic write locks and `@Transactional` methods protect stock changes.
+- Barcode/QR support: ZXing generates QR images for product SKUs.
+- Fulfillment: orders move through `PENDING -> PICKING -> PACKED -> SHIPPED`; packing decrements stock and raises `InsufficientStockException` when stock is unavailable.
+- Security: Spring Security with JWT and role-based `ADMIN` / `OPERATOR` access.
+- Frontend: React dashboard consumes the Spring Boot REST APIs.
+- Database: PostgreSQL for local and Docker runtime; H2 is used only by automated tests.
+- CI/CD: GitHub Actions runs backend tests and frontend production build.
+
+## Response Time Check
+
+The PDF target says API response times should remain below 200 ms for scanning workflows. With the backend running, use this helper to take a quick local measurement:
+
+```powershell
+.\scripts\check-api-performance.ps1 -BaseUrl http://localhost:8081 -Iterations 10
+```
+
+The script logs in with the seeded admin account, calls common API endpoints, and reports average/max response time with a pass/fail status against the 200 ms target.
