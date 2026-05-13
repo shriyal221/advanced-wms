@@ -7,6 +7,8 @@ import com.infotact.wms.api.dto.ReceiveStockResponse;
 import com.infotact.wms.domain.Product;
 import com.infotact.wms.repository.InventoryItemRepository;
 import com.infotact.wms.repository.ProductRepository;
+import com.infotact.wms.repository.WarehouseRepository;
+import com.infotact.wms.domain.Warehouse;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +27,23 @@ class InventoryServiceTest {
     @Autowired
     private InventoryItemRepository inventoryItemRepository;
 
+    @Autowired
+    private WarehouseRepository warehouseRepository;
+
     @Test
     void receiveShipmentAssignsStockToAvailableBin() {
+        Warehouse warehouse = warehouseRepository.findByCode("LKO-01").orElseThrow();
         Product product = productRepository.save(new Product(
             "SKU-TEST-PUTAWAY",
             "Putaway Test Product",
+            "SKU-TEST-PUTAWAY",
             "Used by receiving flow tests.",
             2,
-            BigDecimal.TEN
+            BigDecimal.TEN,
+            BigDecimal.TEN,
+            1.0,
+            null,
+            warehouse
         ));
 
         ReceiveStockResponse response = inventoryService.receive(new ReceiveStockRequest(
