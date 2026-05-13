@@ -18,6 +18,11 @@ import com.infotact.wms.repository.AisleRepository;
 import com.infotact.wms.repository.StorageBinRepository;
 import com.infotact.wms.repository.WarehouseRepository;
 import com.infotact.wms.repository.ZoneRepository;
+import com.infotact.wms.repository.AppUserRepository;
+import com.infotact.wms.domain.AppUser;
+import com.infotact.wms.domain.Role;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -29,17 +34,20 @@ public class WarehouseService {
     private final ZoneRepository zoneRepository;
     private final AisleRepository aisleRepository;
     private final StorageBinRepository storageBinRepository;
+    private final AppUserRepository appUserRepository;
 
     public WarehouseService(
         WarehouseRepository warehouseRepository,
         ZoneRepository zoneRepository,
         AisleRepository aisleRepository,
-        StorageBinRepository storageBinRepository
+        StorageBinRepository storageBinRepository,
+        AppUserRepository appUserRepository
     ) {
         this.warehouseRepository = warehouseRepository;
         this.zoneRepository = zoneRepository;
         this.aisleRepository = aisleRepository;
         this.storageBinRepository = storageBinRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     @Transactional
@@ -54,8 +62,15 @@ public class WarehouseService {
 
     @Transactional(readOnly = true)
     public List<WarehouseResponse> listWarehouses() {
+        AppUser currentUser = getCurrentUser();
         return warehouseRepository.findAll(Sort.by("code"))
             .stream()
+            .filter(w -> {
+                if (currentUser != null && currentUser.getRole() == Role.OPERATOR && currentUser.getWarehouse() != null) {
+                    return w.getId().equals(currentUser.getWarehouse().getId());
+                }
+                return true;
+            })
             .map(WarehouseResponse::from)
             .toList();
     }
@@ -106,9 +121,24 @@ public class WarehouseService {
 
     @Transactional(readOnly = true)
     public List<StorageBinResponse> listBins() {
+        AppUser currentUser = getCurrentUser();
         return storageBinRepository.findAllWithLocation()
             .stream()
+            .filter(bin -> {
+                if (currentUser != null && currentUser.getRole() == Role.OPERATOR && currentUser.getWarehouse() != null) {
+                    return bin.getAisle().getZone().getWarehouse().getId().equals(currentUser.getWarehouse().getId());
+                }
+                return true;
+            })
             .map(StorageBinResponse::from)
             .toList();
+    }
+
+    private AppUser getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getName() != null) {
+            return appUserRepository.findByUsername(auth.getName()).orElse(null);
+        }
+        return null;
     }
 }
