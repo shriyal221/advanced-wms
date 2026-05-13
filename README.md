@@ -88,10 +88,6 @@ Required production values:
 
 Example requests are in `docs/api.http`.
 
-## Evaluation Notes
-
-The PDF requires continuous GitHub activity across four weeks. This repository is ready for that workflow, but the commit history itself should be built honestly over time using feature branches and pull requests. The included CI runs `mvn -B clean test` for the backend and a production build for the frontend.
-
 ## PDF Requirement Alignment
 
 - Project scope: Project 1, Enterprise Warehouse Management System.
