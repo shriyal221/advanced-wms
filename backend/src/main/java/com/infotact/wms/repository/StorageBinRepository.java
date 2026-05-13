@@ -18,11 +18,12 @@ public interface StorageBinRepository extends JpaRepository<StorageBin, Long> {
         from StorageBin b
         join fetch b.aisle a
         join fetch a.zone z
-        join fetch z.warehouse
-        where b.capacity - b.usedCapacity >= :requiredCapacity
+        join fetch z.warehouse w
+        where w.id = :warehouseId and b.capacity - b.usedCapacity >= :requiredCapacity
         order by (b.capacity - b.usedCapacity) desc
         """)
     List<StorageBin> findPutawayCandidatesForUpdate(
+        @Param("warehouseId") Long warehouseId,
         @Param("requiredCapacity") int requiredCapacity,
         Pageable pageable
     );
