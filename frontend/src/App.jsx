@@ -3,7 +3,10 @@ import {
   Building2,
   CheckCircle2,
   ClipboardList,
+  Eye,
+  EyeOff,
   Factory,
+  History,
   LogOut,
   PackagePlus,
   PackageSearch,
@@ -16,7 +19,9 @@ import {
   ShoppingCart,
   Tags,
   Truck,
-  UserCog
+  UserCog,
+  UserPlus,
+  Warehouse as WarehouseIcon
 } from 'lucide-react';
 import { useEffect, useMemo, useState, memo, useCallback } from 'react';
 import { API_URL, apiBlob, apiRequest } from './api.js';
@@ -87,6 +92,9 @@ function App() {
   const [purchaseForm, setPurchaseForm] = useState({ supplierId: '', warehouseId: '', expectedDate: '', productId: '', quantity: 1 });
   const [userForm, setUserForm] = useState(blankUser);
   const [editingUserId, setEditingUserId] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [authMode, setAuthMode] = useState('login');
+  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', email: '', contactNumber: '', warehouseCode: '', warehouseName: '', warehouseAddress: '' });
 
   const token = auth?.token;
   const isAdmin = auth?.roles?.includes('ADMIN');
@@ -143,7 +151,8 @@ function App() {
         nextOrders,
         nextSuppliers,
         nextPurchaseOrders,
-        nextUsers
+        nextUsers,
+        nextAuditLogs
       ] = await Promise.all([
         apiRequest('/products', { token }),
         apiRequest('/product-categories', { token }),
@@ -155,7 +164,8 @@ function App() {
         apiRequest('/orders', { token }),
         apiRequest('/procurement/suppliers', { token }),
         apiRequest('/procurement/purchase-orders', { token }),
-        isAdmin ? apiRequest('/users', { token }) : Promise.resolve([])
+        isAdmin ? apiRequest('/users', { token }) : Promise.resolve([]),
+        apiRequest('/audit-logs?limit=50', { token }).catch(() => [])
       ]);
       setProducts(nextProducts);
       setCategories(nextCategories);
@@ -168,6 +178,7 @@ function App() {
       setSuppliers(nextSuppliers);
       setPurchaseOrders(nextPurchaseOrders);
       setUsers(nextUsers);
+      setAuditLogs(nextAuditLogs);
     });
   }
 
@@ -186,6 +197,19 @@ function App() {
   function logout() {
     localStorage.removeItem('wms-auth');
     setAuth(null);
+  }
+
+  async function register(event) {
+    event.preventDefault();
+    await run(async () => {
+      const nextAuth = await apiRequest('/auth/register', {
+        method: 'POST',
+        body: registerForm
+      });
+      localStorage.setItem('wms-auth', JSON.stringify(nextAuth));
+      setAuth(nextAuth);
+      setRegisterForm({ username: '', password: '', name: '', email: '', contactNumber: '', warehouseCode: '', warehouseName: '', warehouseAddress: '' });
+    }, 'Account created successfully!');
   }
 
   async function createProduct(event) {
@@ -352,31 +376,108 @@ function App() {
 
   if (!auth) {
     return (
-      <main className="login-shell">
-        <section className="login-panel">
-          <div className="brand-line">
-            <ShieldCheck size={30} />
-            <div>
-              <p>Infotact WMS</p>
-              <h1>Advanced Warehouse Management</h1>
+      <main className="auth-shell">
+        <div className="auth-container">
+          <div className="auth-hero">
+            <div className="hero-icon"><ShieldCheck size={32} /></div>
+            <h1>Infotact WMS</h1>
+            <p>Enterprise-grade warehouse management with real-time inventory tracking, smart order fulfillment, and audit compliance.</p>
+            <div className="hero-features">
+              <div className="hero-feature"><CheckCircle2 size={18} />Real-time inventory tracking</div>
+              <div className="hero-feature"><CheckCircle2 size={18} />Multi-warehouse support</div>
+              <div className="hero-feature"><CheckCircle2 size={18} />Role-based access control</div>
+              <div className="hero-feature"><CheckCircle2 size={18} />Complete audit trail</div>
             </div>
           </div>
-          <form onSubmit={login} className="login-form">
-            <label>
-              Username
-              <input autoComplete="username" required value={loginForm.username} onChange={(event) => setLoginForm({ ...loginForm, username: event.target.value })} />
-            </label>
-            <label>
-              Password
-              <input autoComplete="current-password" required type="password" value={loginForm.password} onChange={(event) => setLoginForm({ ...loginForm, password: event.target.value })} />
-            </label>
-            <button type="submit" disabled={loading}>
-              <ShieldCheck size={18} />
-              Sign in
-            </button>
-          </form>
-          {message && <p className="message error">{message}</p>}
-        </section>
+          <div className="auth-panel">
+            {authMode === 'login' ? (
+              <>
+                <div className="auth-header">
+                  <h2>Welcome Back</h2>
+                  <p>Sign in to your warehouse console</p>
+                </div>
+                <form onSubmit={login} className="auth-form">
+                  <div className="field-group">
+                    <label>Username</label>
+                    <input id="login-username" autoComplete="username" required placeholder="Enter username" value={loginForm.username} onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })} />
+                  </div>
+                  <div className="field-group">
+                    <label>Password</label>
+                    <input id="login-password" autoComplete="current-password" required type="password" placeholder="Enter password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
+                  </div>
+                  <button type="submit" disabled={loading}><ShieldCheck size={18} />{loading ? 'Signing in...' : 'Sign In'}</button>
+                </form>
+                {message && <div className={`auth-message ${message.includes('Signed') ? 'success' : 'error'}`}>{message}</div>}
+                <div className="auth-switch">
+                  Don&apos;t have an account? <button type="button" onClick={() => { setAuthMode('register'); setMessage(''); }}>Create Admin Account</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="auth-header">
+                  <h2>Create Admin Account</h2>
+                  <p>Register with your warehouse details</p>
+                </div>
+                <form onSubmit={register} className="auth-form">
+                  <div className="field-row">
+                    <div className="field-group">
+                      <label>Full Name</label>
+                      <input id="reg-name" required placeholder="Your full name" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
+                    </div>
+                    <div className="field-group">
+                      <label>Username</label>
+                      <input id="reg-username" required minLength={3} pattern="^[A-Za-z0-9][A-Za-z0-9._-]*$" placeholder="Choose a username" value={registerForm.username} onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })} />
+                      <span className="field-hint">{registerForm.username && (registerForm.username.length < 3 ? <span className="error">Min 3 characters</span> : <span className="success">✓</span>)}</span>
+                    </div>
+                  </div>
+                  <div className="field-group">
+                    <label>Email</label>
+                    <input id="reg-email" type="email" required placeholder="admin@example.com" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
+                    <span className="field-hint">{registerForm.email && (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email) ? <span className="success">✓ Valid email</span> : <span className="error">Enter a valid email</span>)}</span>
+                  </div>
+                  <div className="field-row">
+                    <div className="field-group">
+                      <label>Password</label>
+                      <input id="reg-password" type="password" required minLength={6} placeholder="Min 6 characters" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
+                      <div className="password-strength">
+                        {[1,2,3,4].map(i => {
+                          const len = registerForm.password.length;
+                          const strength = len === 0 ? 0 : len < 6 ? 1 : len < 8 ? 2 : len < 12 ? 3 : 4;
+                          const cls = strength >= i ? (strength <= 1 ? 'weak' : strength <= 2 ? 'medium' : 'strong') : '';
+                          return <div key={i} className={`bar ${strength >= i ? 'active' : ''} ${cls}`} />;
+                        })}
+                      </div>
+                    </div>
+                    <div className="field-group">
+                      <label>Phone (optional)</label>
+                      <input id="reg-phone" placeholder="+91 90000 00000" value={registerForm.contactNumber} onChange={(e) => setRegisterForm({ ...registerForm, contactNumber: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="auth-divider">Your Warehouse</div>
+                  <div className="field-row">
+                    <div className="field-group">
+                      <label>Warehouse Code</label>
+                      <input id="reg-wh-code" required pattern="^[A-Za-z0-9._-]+$" minLength={2} placeholder="e.g. BLR-01" value={registerForm.warehouseCode} onChange={(e) => setRegisterForm({ ...registerForm, warehouseCode: e.target.value })} />
+                    </div>
+                    <div className="field-group">
+                      <label>Warehouse Name</label>
+                      <input id="reg-wh-name" required placeholder="e.g. Bengaluru Hub" value={registerForm.warehouseName} onChange={(e) => setRegisterForm({ ...registerForm, warehouseName: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="field-group">
+                    <label>Warehouse Address (optional)</label>
+                    <input id="reg-wh-address" placeholder="Full address" value={registerForm.warehouseAddress} onChange={(e) => setRegisterForm({ ...registerForm, warehouseAddress: e.target.value })} />
+                  </div>
+                  <button type="submit" disabled={loading}><UserPlus size={18} />{loading ? 'Creating...' : 'Create Account & Warehouse'}</button>
+                </form>
+                {message && <div className={`auth-message ${message.includes('success') ? 'success' : 'error'}`}>{message}</div>}
+                <div className="auth-switch">
+                  Already have an account? <button type="button" onClick={() => { setAuthMode('login'); setMessage(''); }}>Sign In</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </main>
     );
   }
@@ -421,7 +522,7 @@ function App() {
           </div>
         </header>
 
-        {activeTab === 'dashboard' && <Dashboard totals={totals} inventory={inventory} bins={bins} orders={orders} purchaseOrders={purchaseOrders} />}
+        {activeTab === 'dashboard' && <Dashboard totals={totals} inventory={inventory} bins={bins} orders={orders} purchaseOrders={purchaseOrders} auditLogs={auditLogs} />}
         {activeTab === 'products' && (
           <Catalog
             isAdmin={isAdmin}
@@ -512,7 +613,7 @@ function App() {
   );
 }
 
-const Dashboard = memo(function Dashboard({ totals, inventory, bins, orders, purchaseOrders }) {
+const Dashboard = memo(function Dashboard({ totals, inventory, bins, orders, purchaseOrders, auditLogs }) {
   const recentOrders = orders.slice(0, 5);
   const recentPurchases = purchaseOrders.slice(0, 4);
   return (
@@ -522,6 +623,45 @@ const Dashboard = memo(function Dashboard({ totals, inventory, bins, orders, pur
         <Metric icon={Tags} label="Categories" value={totals.categories} />
         <Metric icon={Boxes} label="Available Units" value={totals.available} />
         <Metric icon={Truck} label="Capacity Used" value={`${totals.usedPercent}%`} />
+      </section>
+      <section className="panel wide">
+        <PanelTitle icon={History} title="Audit History &amp; Logs" />
+        {auditLogs.length === 0 ? (
+          <div className="empty-state">
+            <History size={40} />
+            <p>No audit logs yet. Receive stock or fulfill orders to generate transaction history.</p>
+          </div>
+        ) : (
+          <table className="audit-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Bin</th>
+                <th>Qty Change</th>
+                <th>Reference</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auditLogs.map((log) => {
+                const typeCls = log.type.toLowerCase().includes('receive') ? 'receive' : log.type.toLowerCase().includes('pick') ? 'pick' : log.type.toLowerCase().includes('release') ? 'release' : 'adjust';
+                return (
+                  <tr key={log.id}>
+                    <td><span className={`audit-type ${typeCls}`}>{log.type}</span></td>
+                    <td>{log.productName}</td>
+                    <td>{log.productSku}</td>
+                    <td>{log.binCode}</td>
+                    <td><span className={`audit-delta ${log.quantityDelta >= 0 ? 'positive' : 'negative'}`}>{log.quantityDelta >= 0 ? '+' : ''}{log.quantityDelta}</span></td>
+                    <td>{log.reference || '—'}</td>
+                    <td className="audit-time">{new Date(log.createdAt).toLocaleString()}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </section>
       <section className="panel wide">
         <PanelTitle icon={PackageSearch} title="Inventory Ledger" />
