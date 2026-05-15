@@ -2,7 +2,9 @@ package com.infotact.wms.api;
 
 import com.infotact.wms.api.dto.AuthResponse;
 import com.infotact.wms.api.dto.LoginRequest;
+import com.infotact.wms.api.dto.RegisterRequest;
 import com.infotact.wms.security.JwtService;
+import com.infotact.wms.service.RegistrationService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,10 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RegistrationService registrationService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, RegistrationService registrationService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.registrationService = registrationService;
     }
 
     @PostMapping("/login")
@@ -36,5 +40,10 @@ public class AuthController {
             .map(authority -> authority.replaceFirst("^ROLE_", ""))
             .toList();
         return new AuthResponse(jwtService.generate(authentication), authentication.getName(), roles);
+    }
+
+    @PostMapping("/register")
+    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+        return registrationService.register(request);
     }
 }
