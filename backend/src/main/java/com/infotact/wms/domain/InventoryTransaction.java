@@ -55,4 +55,28 @@ public class InventoryTransaction {
     public Long getId() {
         return id;
     }
+
+    public InventoryTransactionType getType() {
+        return type;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public StorageBin getStorageBin() {
+        return storageBin;
+    }
+
+    public int getQuantityDelta() {
+        return quantityDelta;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }
