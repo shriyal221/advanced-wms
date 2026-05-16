@@ -66,7 +66,7 @@ public class WarehouseService {
         return warehouseRepository.findAll(Sort.by("code"))
             .stream()
             .filter(w -> {
-                if (currentUser != null && currentUser.getRole() == Role.OPERATOR && currentUser.getWarehouse() != null) {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
                     return w.getId().equals(currentUser.getWarehouse().getId());
                 }
                 return true;
@@ -85,8 +85,15 @@ public class WarehouseService {
 
     @Transactional(readOnly = true)
     public List<ZoneResponse> listZones() {
+        AppUser currentUser = getCurrentUser();
         return zoneRepository.findAll(Sort.by("code"))
             .stream()
+            .filter(zone -> {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
+                    return zone.getWarehouse().getId().equals(currentUser.getWarehouse().getId());
+                }
+                return true;
+            })
             .map(ZoneResponse::from)
             .toList();
     }
@@ -101,8 +108,15 @@ public class WarehouseService {
 
     @Transactional(readOnly = true)
     public List<AisleResponse> listAisles() {
+        AppUser currentUser = getCurrentUser();
         return aisleRepository.findAll(Sort.by("code"))
             .stream()
+            .filter(aisle -> {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
+                    return aisle.getZone().getWarehouse().getId().equals(currentUser.getWarehouse().getId());
+                }
+                return true;
+            })
             .map(AisleResponse::from)
             .toList();
     }
@@ -125,7 +139,7 @@ public class WarehouseService {
         return storageBinRepository.findAllWithLocation()
             .stream()
             .filter(bin -> {
-                if (currentUser != null && currentUser.getRole() == Role.OPERATOR && currentUser.getWarehouse() != null) {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
                     return bin.getAisle().getZone().getWarehouse().getId().equals(currentUser.getWarehouse().getId());
                 }
                 return true;

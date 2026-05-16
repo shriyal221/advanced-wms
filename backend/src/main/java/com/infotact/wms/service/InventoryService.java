@@ -92,7 +92,7 @@ public class InventoryService {
         return inventoryItemRepository.findAllWithDetails()
             .stream()
             .filter(item -> {
-                if (currentUser != null && currentUser.getRole() == Role.OPERATOR && currentUser.getWarehouse() != null) {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
                     return item.getStorageBin().getAisle().getZone().getWarehouse().getId().equals(currentUser.getWarehouse().getId());
                 }
                 return true;

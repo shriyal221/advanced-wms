@@ -2,16 +2,20 @@ package com.infotact.wms.service;
 
 import com.infotact.wms.api.dto.ProductRequest;
 import com.infotact.wms.api.dto.ProductResponse;
+import com.infotact.wms.domain.AppUser;
 import com.infotact.wms.domain.Product;
 import com.infotact.wms.domain.ProductCategory;
 import com.infotact.wms.domain.Warehouse;
 import com.infotact.wms.exception.DuplicateResourceException;
 import com.infotact.wms.exception.ResourceNotFoundException;
+import com.infotact.wms.repository.AppUserRepository;
 import com.infotact.wms.repository.ProductCategoryRepository;
 import com.infotact.wms.repository.ProductRepository;
 import com.infotact.wms.repository.WarehouseRepository;
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,15 +24,18 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final WarehouseRepository warehouseRepository;
+    private final AppUserRepository appUserRepository;
 
     public ProductService(
         ProductRepository productRepository,
         ProductCategoryRepository productCategoryRepository,
-        WarehouseRepository warehouseRepository
+        WarehouseRepository warehouseRepository,
+        AppUserRepository appUserRepository
     ) {
         this.productRepository = productRepository;
         this.productCategoryRepository = productCategoryRepository;
         this.warehouseRepository = warehouseRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     @Transactional
@@ -68,8 +75,15 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public List<ProductResponse> list() {
+        AppUser currentUser = getCurrentUser();
         return productRepository.findAllWithDetails()
             .stream()
+            .filter(product -> {
+                if (currentUser != null && currentUser.getWarehouse() != null && product.getWarehouse() != null) {
+                    return product.getWarehouse().getId().equals(currentUser.getWarehouse().getId());
+                }
+                return true;
+            })
             .map(ProductResponse::from)
             .toList();
     }
@@ -85,5 +99,13 @@ public class ProductService {
             return fallbackSku;
         }
         return barcode.trim().toUpperCase();
+    }
+
+    private AppUser getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getName() != null) {
+            return appUserRepository.findByUsername(auth.getName()).orElse(null);
+        }
+        return null;
     }
 }

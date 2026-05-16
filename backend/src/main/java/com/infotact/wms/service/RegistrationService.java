@@ -76,7 +76,7 @@ public class RegistrationService {
         Authentication auth = new UsernamePasswordAuthenticationToken(
             username, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
         );
-        return new AuthResponse(jwtService.generate(auth), username, roles);
+        return new AuthResponse(jwtService.generate(auth), username, roles, warehouse.getId(), warehouse.getCode(), warehouse.getName());
     }
 
     private String trimToNull(String value) {

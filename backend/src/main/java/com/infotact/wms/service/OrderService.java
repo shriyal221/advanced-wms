@@ -64,7 +64,7 @@ public class OrderService {
         return customerOrderRepository.findAllWithLines()
             .stream()
             .filter(order -> {
-                if (currentUser != null && currentUser.getRole() == Role.OPERATOR && currentUser.getWarehouse() != null) {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
                     return order.getWarehouse().getId().equals(currentUser.getWarehouse().getId());
                 }
                 return true;

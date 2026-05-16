@@ -10,6 +10,8 @@ import com.infotact.wms.exception.ResourceNotFoundException;
 import com.infotact.wms.repository.AppUserRepository;
 import com.infotact.wms.repository.WarehouseRepository;
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +30,16 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserResponse> list() {
+        AppUser currentUser = getCurrentUser();
         return appUserRepository.findAll()
             .stream()
+            .filter(user -> {
+                if (currentUser != null && currentUser.getWarehouse() != null) {
+                    return user.getWarehouse() != null
+                        && user.getWarehouse().getId().equals(currentUser.getWarehouse().getId());
+                }
+                return true;
+            })
             .map(UserResponse::from)
             .toList();
     }
@@ -109,5 +119,13 @@ public class UserService {
 
     private String trimToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private AppUser getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getName() != null) {
+            return appUserRepository.findByUsername(auth.getName()).orElse(null);
+        }
+        return null;
     }
 }
