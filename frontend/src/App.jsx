@@ -82,7 +82,6 @@ function App() {
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [productForm, setProductForm] = useState(blankProduct);
   const [categoryForm, setCategoryForm] = useState({ name: '', warehouseId: '', parentCategoryId: '', preferredZoneId: '' });
-  const [warehouseForm, setWarehouseForm] = useState({ code: '', name: '', address: '' });
   const [zoneForm, setZoneForm] = useState({ warehouseId: '', code: '', name: '' });
   const [aisleForm, setAisleForm] = useState({ zoneId: '', code: '' });
   const [binForm, setBinForm] = useState({ aisleId: '', code: '', capacity: 100 });
@@ -236,15 +235,6 @@ function App() {
       setCategoryForm({ name: '', warehouseId: '', parentCategoryId: '', preferredZoneId: '' });
       await loadAll();
     }, 'Category created.');
-  }
-
-  async function createWarehouse(event) {
-    event.preventDefault();
-    await run(async () => {
-      await apiRequest('/warehouses', { method: 'POST', token, body: warehouseForm });
-      setWarehouseForm({ code: '', name: '', address: '' });
-      await loadAll();
-    }, 'Warehouse created.');
   }
 
   async function createZone(event) {
@@ -508,7 +498,7 @@ function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">{auth.roles.join(', ')}</p>
+            <p className="eyebrow">{auth.roles.join(', ')} &bull; {auth.warehouseName || 'Global'}</p>
             <h2>{visibleTabs.find((tab) => tab.id === activeTab)?.label}</h2>
           </div>
           <div className="topbar-actions">
@@ -546,15 +536,12 @@ function App() {
             zones={zones}
             aisles={aisles}
             bins={bins}
-            warehouseForm={warehouseForm}
-            setWarehouseForm={setWarehouseForm}
             zoneForm={zoneForm}
             setZoneForm={setZoneForm}
             aisleForm={aisleForm}
             setAisleForm={setAisleForm}
             binForm={binForm}
             setBinForm={setBinForm}
-            createWarehouse={createWarehouse}
             createZone={createZone}
             createAisle={createAisle}
             createBin={createBin}
@@ -817,15 +804,12 @@ const Warehouse = memo(function Warehouse(props) {
     zones,
     aisles,
     bins,
-    warehouseForm,
-    setWarehouseForm,
     zoneForm,
     setZoneForm,
     aisleForm,
     setAisleForm,
     binForm,
     setBinForm,
-    createWarehouse,
     createZone,
     createAisle,
     createBin
@@ -837,12 +821,6 @@ const Warehouse = memo(function Warehouse(props) {
         <section className="panel wide">
           <PanelTitle icon={Building2} title="Location Setup" />
           <div className="setup-grid">
-            <form onSubmit={createWarehouse} className="form-grid">
-              <input required pattern="^[A-Za-z0-9._-]+$" maxLength="40" placeholder="Warehouse code" value={warehouseForm.code} onChange={(event) => setWarehouseForm({ ...warehouseForm, code: event.target.value })} />
-              <input required maxLength="160" placeholder="Warehouse name" value={warehouseForm.name} onChange={(event) => setWarehouseForm({ ...warehouseForm, name: event.target.value })} />
-              <input maxLength="255" placeholder="Address" value={warehouseForm.address} onChange={(event) => setWarehouseForm({ ...warehouseForm, address: event.target.value })} />
-              <button type="submit"><Plus size={18} />Warehouse</button>
-            </form>
             <form onSubmit={createZone} className="form-grid">
               <Select required value={zoneForm.warehouseId} onChange={(warehouseId) => setZoneForm({ ...zoneForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
               <input required pattern="^[A-Za-z0-9._-]+$" maxLength="40" placeholder="Zone code" value={zoneForm.code} onChange={(event) => setZoneForm({ ...zoneForm, code: event.target.value })} />
