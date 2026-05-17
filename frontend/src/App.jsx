@@ -7,6 +7,8 @@ import {
   EyeOff,
   Factory,
   History,
+  LayoutGrid,
+  List,
   LogOut,
   PackagePlus,
   PackageSearch,
@@ -739,6 +741,10 @@ const Catalog = memo(function Catalog(props) {
   } = props;
 
   const [barcodeUrls, setBarcodeUrls] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [viewMode, setViewMode] = useState('grid');
+  const [activeFormTab, setActiveFormTab] = useState('product');
 
   useEffect(() => {
     if (!token || products.length === 0) {
@@ -767,66 +773,226 @@ const Catalog = memo(function Catalog(props) {
     };
   }, [products, token]);
 
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = 
+      product.sku.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = 
+      selectedCategory === 'ALL' || 
+      String(product.categoryId) === String(selectedCategory);
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div className="split-view">
       {isAdmin && (
-        <section className="panel">
-          <PanelTitle icon={PackagePlus} title="Create Product" />
-          <form onSubmit={createProduct} className="form-grid">
-            <input required pattern="^[A-Za-z0-9][A-Za-z0-9._-]*$" maxLength="80" placeholder="SKU" value={productForm.sku} onChange={(event) => setProductForm({ ...productForm, sku: event.target.value })} />
-            <input required maxLength="160" placeholder="Name" value={productForm.name} onChange={(event) => setProductForm({ ...productForm, name: event.target.value })} />
-            <input pattern="^[A-Za-z0-9._-]*$" maxLength="120" placeholder="Barcode" value={productForm.barcode} onChange={(event) => setProductForm({ ...productForm, barcode: event.target.value })} />
-            <Select required value={productForm.warehouseId} onChange={(warehouseId) => setProductForm({ ...productForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
-            <Select value={productForm.categoryId} onChange={(categoryId) => setProductForm({ ...productForm, categoryId })} label="Category" options={categories.map((category) => [category.id, category.name])} />
-            <textarea maxLength="255" placeholder="Description" value={productForm.description} onChange={(event) => setProductForm({ ...productForm, description: event.target.value })} />
-            <input required type="number" min="1" placeholder="Unit volume" value={productForm.unitVolume} onChange={(event) => setProductForm({ ...productForm, unitVolume: Number(event.target.value) })} />
-            <input required type="number" min="0" placeholder="Min threshold" value={productForm.reorderThreshold} onChange={(event) => setProductForm({ ...productForm, reorderThreshold: Number(event.target.value) })} />
-            <input required type="number" min="0" step="0.01" placeholder="Price" value={productForm.price} onChange={(event) => setProductForm({ ...productForm, price: Number(event.target.value) })} />
-            <input required type="number" min="0" step="0.01" placeholder="Weight" value={productForm.weight} onChange={(event) => setProductForm({ ...productForm, weight: Number(event.target.value) })} />
-            <button type="submit">
-              <Plus size={18} />
-              Add product
+        <section className="panel" style={{ flex: '0 0 350px' }}>
+          <div className="form-toggle-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-light)', paddingBottom: '10px' }}>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeFormTab === 'product' ? 'active' : ''}`}
+              onClick={() => setActiveFormTab('product')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'product' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'product' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              <PackagePlus size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Product
             </button>
-          </form>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeFormTab === 'category' ? 'active' : ''}`}
+              onClick={() => setActiveFormTab('category')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'category' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'category' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              <Tags size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Category
+            </button>
+          </div>
 
-          <PanelTitle icon={Tags} title="Create Category" />
-          <form onSubmit={createCategory} className="form-grid">
-            <input required maxLength="160" placeholder="Category name" value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
-            <Select required value={categoryForm.warehouseId} onChange={(warehouseId) => setCategoryForm({ ...categoryForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
-            <Select value={categoryForm.parentCategoryId} onChange={(parentCategoryId) => setCategoryForm({ ...categoryForm, parentCategoryId })} label="Parent category" options={categories.map((category) => [category.id, category.name])} />
-            <Select value={categoryForm.preferredZoneId} onChange={(preferredZoneId) => setCategoryForm({ ...categoryForm, preferredZoneId })} label="Preferred zone" options={zones.map((zone) => [zone.id, zone.code])} />
-            <button type="submit"><Plus size={18} />Add category</button>
-          </form>
+          {activeFormTab === 'product' ? (
+            <>
+              <PanelTitle icon={PackagePlus} title="Create Product" />
+              <form onSubmit={createProduct} className="form-grid" style={{ gap: '10px' }}>
+                <input required pattern="^[A-Za-z0-9][A-Za-z0-9._-]*$" maxLength="80" placeholder="SKU" value={productForm.sku} onChange={(event) => setProductForm({ ...productForm, sku: event.target.value })} />
+                <input required maxLength="160" placeholder="Name" value={productForm.name} onChange={(event) => setProductForm({ ...productForm, name: event.target.value })} />
+                <input pattern="^[A-Za-z0-9._-]*$" maxLength="120" placeholder="Barcode (Optional)" value={productForm.barcode} onChange={(event) => setProductForm({ ...productForm, barcode: event.target.value })} />
+                <Select required value={productForm.warehouseId} onChange={(warehouseId) => setProductForm({ ...productForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
+                <Select value={productForm.categoryId} onChange={(categoryId) => setProductForm({ ...productForm, categoryId })} label="Category" options={categories.map((category) => [category.id, category.name])} />
+                <textarea maxLength="255" placeholder="Description" value={productForm.description} onChange={(event) => setProductForm({ ...productForm, description: event.target.value })} style={{ minHeight: '60px' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <input required type="number" min="1" placeholder="Unit volume" value={productForm.unitVolume} onChange={(event) => setProductForm({ ...productForm, unitVolume: Number(event.target.value) })} />
+                  <input required type="number" min="0" placeholder="Min threshold" value={productForm.reorderThreshold} onChange={(event) => setProductForm({ ...productForm, reorderThreshold: Number(event.target.value) })} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <input required type="number" min="0" step="0.01" placeholder="Price" value={productForm.price} onChange={(event) => setProductForm({ ...productForm, price: Number(event.target.value) })} />
+                  <input required type="number" min="0" step="0.01" placeholder="Weight" value={productForm.weight} onChange={(event) => setProductForm({ ...productForm, weight: Number(event.target.value) })} />
+                </div>
+                <button type="submit" style={{ marginTop: '10px' }}>
+                  <Plus size={18} />
+                  Add Product
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <PanelTitle icon={Tags} title="Create Category" />
+              <form onSubmit={createCategory} className="form-grid" style={{ gap: '10px' }}>
+                <input required maxLength="160" placeholder="Category name" value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+                <Select required value={categoryForm.warehouseId} onChange={(warehouseId) => setCategoryForm({ ...categoryForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
+                <Select value={categoryForm.parentCategoryId} onChange={(parentCategoryId) => setCategoryForm({ ...categoryForm, parentCategoryId })} label="Parent category" options={categories.map((category) => [category.id, category.name])} />
+                <Select value={categoryForm.preferredZoneId} onChange={(preferredZoneId) => setCategoryForm({ ...categoryForm, preferredZoneId })} label="Preferred zone" options={zones.map((zone) => [zone.id, zone.code])} />
+                <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Add Category</button>
+              </form>
+            </>
+          )}
         </section>
       )}
-      <section className={isAdmin ? "panel" : "panel wide"}>
-        <PanelTitle icon={QrCode} title="Product Catalog" />
-        <table>
-          <thead>
-            <tr>
-              <th>Barcode</th>
-              <th>SKU</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Warehouse</th>
-              <th>Threshold</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id}>
-                <td>{barcodeUrls[product.id] ? <img className="qr" src={barcodeUrls[product.id]} alt={`${product.sku} QR code`} /> : <span className="muted">Secured</span>}</td>
-                <td>{product.sku}</td>
-                <td>{product.name}</td>
-                <td>{product.categoryName || 'Unassigned'}</td>
-                <td>{product.warehouseCode || 'Unassigned'}</td>
-                <td>{product.reorderThreshold}</td>
-                <td>{currency(product.price)}</td>
-              </tr>
+      <section className={isAdmin ? "panel" : "panel wide"} style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <PanelTitle icon={QrCode} title={`Product Catalog (${filteredProducts.length})`} />
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input 
+              type="text" 
+              placeholder="Search SKU or Name..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              style={{ width: '200px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
+            />
+            <select 
+              value={selectedCategory} 
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'white', fontSize: '0.9rem' }}
+            >
+              <option value="ALL">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            <div style={{ display: 'flex', border: '1px solid var(--border-light)', borderRadius: '8px', overflow: 'hidden' }}>
+              <button 
+                type="button" 
+                onClick={() => setViewMode('grid')} 
+                style={{ padding: '8px', background: viewMode === 'grid' ? 'var(--primary-color)' : 'white', color: viewMode === 'grid' ? 'white' : 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}
+                title="Grid View"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setViewMode('table')} 
+                style={{ padding: '8px', background: viewMode === 'table' ? 'var(--primary-color)' : 'white', color: viewMode === 'table' ? 'white' : 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}
+                title="Table View"
+              >
+                <List size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {filteredProducts.length === 0 ? (
+          <div className="empty-state" style={{ padding: '40px' }}>
+            <QrCode size={48} className="muted" />
+            <p>No products found matching your search criteria.</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+            {filteredProducts.map((product) => (
+              <div 
+                key={product.id} 
+                className="product-card" 
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.45)', 
+                  backdropFilter: 'blur(10px)', 
+                  border: '1px solid rgba(255, 255, 255, 0.25)', 
+                  borderRadius: '16px', 
+                  padding: '16px', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between',
+                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.03)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.03)';
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-color)', background: 'rgba(59, 130, 246, 0.1)', padding: '4px 8px', borderRadius: '6px', letterSpacing: '0.05em' }}>
+                      {product.sku}
+                    </span>
+                    {barcodeUrls[product.id] ? (
+                      <img className="qr" src={barcodeUrls[product.id]} alt={`${product.sku} QR code`} style={{ width: '42px', height: '42px', borderRadius: '4px', border: '1px solid #eee' }} />
+                    ) : (
+                      <span style={{ fontSize: '0.7rem', color: '#999' }}>Secured</span>
+                    )}
+                  </div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px 0', lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '40px' }}>
+                    {product.name}
+                  </h4>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 12px 0' }}>
+                    {product.description || 'No description provided.'}
+                  </p>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '12px', marginTop: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Category:</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{product.categoryName || 'Unassigned'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Warehouse:</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{product.warehouseCode || 'Unassigned'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Threshold:</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{product.reorderThreshold} units</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      {currency(product.price)}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#888' }}>
+                      Vol: {product.unitVolume}m³ &bull; Wt: {product.weight}kg
+                    </span>
+                  </div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Barcode</th>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Warehouse</th>
+                <th>Threshold</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product) => (
+                <tr key={product.id}>
+                  <td>{barcodeUrls[product.id] ? <img className="qr" src={barcodeUrls[product.id]} alt={`${product.sku} QR code`} /> : <span className="muted">Secured</span>}</td>
+                  <td>{product.sku}</td>
+                  <td>{product.name}</td>
+                  <td>{product.categoryName || 'Unassigned'}</td>
+                  <td>{product.warehouseCode || 'Unassigned'}</td>
+                  <td>{product.reorderThreshold}</td>
+                  <td>{currency(product.price)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
     </div>
   );
