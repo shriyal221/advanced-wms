@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,11 +43,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Transactional(readOnly = true)
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         String username = request.username().trim().toLowerCase();
         Optional<AppUser> candidate = appUserRepository.findByUsernameWithWarehouse(username);
         boolean active = candidate
-            .map(user -> "ACTIVE".equalsIgnoreCase(user.getStatus()))
+            .map(user -> user.getStatus() == null || "ACTIVE".equalsIgnoreCase(user.getStatus()))
             .orElse(false);
         boolean passwordMatches = candidate
             .map(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))

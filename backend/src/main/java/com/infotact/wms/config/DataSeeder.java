@@ -84,11 +84,31 @@ public class DataSeeder {
                 }
             }
 
-            if (!userRepository.existsByUsername("admin")) {
+            AppUser adminUser = userRepository.findByUsername("admin").orElse(null);
+            if (adminUser == null) {
                 userRepository.save(new AppUser("admin", passwordEncoder.encode(adminPassword), Role.ADMIN, "Warehouse Admin", "admin@infotact.local", "+91 90000 00001", warehouse));
+            } else {
+                adminUser.updateProfile("Warehouse Admin", "admin@infotact.local", "+91 90000 00001", Role.ADMIN, "ACTIVE", warehouse);
+                adminUser.changePassword(passwordEncoder.encode(adminPassword));
+                userRepository.save(adminUser);
             }
-            if (!userRepository.existsByUsername("operator")) {
+
+            AppUser operatorUser = userRepository.findByUsername("operator").orElse(null);
+            if (operatorUser == null) {
                 userRepository.save(new AppUser("operator", passwordEncoder.encode(operatorPassword), Role.OPERATOR, "Floor Operator", "operator@infotact.local", "+91 90000 00002", warehouse));
+            } else {
+                operatorUser.updateProfile("Floor Operator", "operator@infotact.local", "+91 90000 00002", Role.OPERATOR, "ACTIVE", warehouse);
+                operatorUser.changePassword(passwordEncoder.encode(operatorPassword));
+                userRepository.save(operatorUser);
+            }
+
+            AppUser shriyalUser = userRepository.findByUsername("shriyal").orElse(null);
+            if (shriyalUser == null) {
+                userRepository.save(new AppUser("shriyal", passwordEncoder.encode(adminPassword), Role.ADMIN, "Shriyal Admin", "shriyal@infotact.local", "+91 90000 00005", warehouse));
+            } else {
+                shriyalUser.updateProfile("Shriyal Admin", "shriyal@infotact.local", "+91 90000 00005", Role.ADMIN, "ACTIVE", warehouse);
+                shriyalUser.changePassword(passwordEncoder.encode(adminPassword));
+                userRepository.save(shriyalUser);
             }
 
             ProductCategory suppliesCategory = null;
@@ -130,7 +150,7 @@ public class DataSeeder {
                 ));
             }
 
-            // Add 10 Professional Products
+            // Add 20 Professional Products
             String[][] professionalProducts = {
                 {"SKU-TK-100", "Industrial Tool Kit", "BC-TK-100", "Professional grade tool kit for industrial maintenance and repair operations.", "5", "10", "12500", "15.5", "Industrial Tools"},
                 {"SKU-PR-500", "Heavy Duty Pallet Rack", "BC-PR-500", "High-capacity steel storage rack designed for heavy industrial pallets.", "20", "5", "28500", "120.0", "Warehouse Equipment"},
@@ -141,7 +161,17 @@ public class DataSeeder {
                 {"SKU-SB-100", "Safety Barrier Guard", "BC-SB-100", "High-visibility steel safety barrier for protecting personnel and equipment.", "25", "10", "9500", "25.0", "Safety Gear"},
                 {"SKU-DWS-300", "Digital Floor Scale", "BC-DWS-300", "Industrial digital floor scale with 300kg capacity and precision sensors.", "12", "4", "15500", "18.0", "Warehouse Equipment"},
                 {"SKU-IVF-24", "High-Velocity Fan", "BC-IVF-24", "24-inch industrial-grade high-velocity fan for warehouse ventilation.", "8", "10", "8900", "14.0", "Warehouse Equipment"},
-                {"SKU-FE-009", "ABC Fire Extinguisher", "BC-FE-009", "Professional 9kg ABC dry powder fire extinguisher for industrial safety.", "6", "20", "4200", "16.0", "Safety Gear"}
+                {"SKU-FE-009", "ABC Fire Extinguisher", "BC-FE-009", "Professional 9kg ABC dry powder fire extinguisher for industrial safety.", "6", "20", "4200", "16.0", "Safety Gear"},
+                {"SKU-WH-HM-01", "Hard Hat Pro", "BC-HM-01", "High-impact resistant hard hat with adjustable suspension.", "1", "100", "1200", "0.4", "Safety Gear"},
+                {"SKU-WH-GV-02", "Heavy Duty Gloves", "BC-GV-02", "Cut-resistant safety gloves for material handling.", "1", "200", "450", "0.1", "Safety Gear"},
+                {"SKU-WH-BW-03", "Bubble Wrap Roll", "BC-BW-03", "100m x 1m industrial bubble wrap for packaging fragile items.", "5", "50", "1800", "2.5", "Packing Supplies"},
+                {"SKU-WH-ST-04", "Stretch Film", "BC-ST-04", "500mm x 300m clear stretch film for pallet wrapping.", "2", "150", "650", "1.8", "Packing Supplies"},
+                {"SKU-WH-CT-05", "Corrugated Boxes Large", "BC-CT-05", "Double-wall corrugated shipping boxes 24x24x24 inches.", "5", "500", "120", "0.5", "Packing Supplies"},
+                {"SKU-WH-PT-06", "Packaging Tape", "BC-PT-06", "Strong adhesive clear packaging tape, 2 inches x 50m.", "1", "1000", "45", "0.2", "Packing Supplies"},
+                {"SKU-WH-TD-07", "Tape Dispenser Gun", "BC-TD-07", "Ergonomic handheld tape dispenser for 2-inch packaging tape.", "2", "30", "350", "0.5", "Warehouse Equipment"},
+                {"SKU-WH-LD-08", "Loading Dock Bumper", "BC-LD-08", "Heavy-duty rubber bumper for loading docks.", "10", "20", "4500", "15.0", "Warehouse Equipment"},
+                {"SKU-WH-MS-09", "Magnetic Sweeper", "BC-MS-09", "24-inch push-type magnetic sweeper for collecting metal debris.", "8", "5", "3200", "12.0", "Warehouse Equipment"},
+                {"SKU-WH-FL-10", "LED Flood Light", "BC-FL-10", "100W industrial LED flood light for warehouse illumination.", "3", "40", "2800", "2.2", "Warehouse Equipment"}
             };
 
             for (String[] pData : professionalProducts) {
