@@ -86,6 +86,8 @@ function App() {
   const [aisleForm, setAisleForm] = useState({ zoneId: '', code: '' });
   const [binForm, setBinForm] = useState({ aisleId: '', code: '', capacity: 100 });
   const [receiveForm, setReceiveForm] = useState({ productId: '', quantity: 1, reference: '', batchNumber: '', expiryDate: '' });
+  const [adjustForm, setAdjustForm] = useState({ productId: '', binId: '', quantityDelta: 0, reason: '' });
+  const [transferForm, setTransferForm] = useState({ productId: '', fromBinId: '', toBinId: '', quantity: 1, reference: '' });
   const [orderForm, setOrderForm] = useState({ warehouseId: '', expectedShipDate: '', productId: '', quantity: 1 });
   const [supplierForm, setSupplierForm] = useState({ name: '', address: '', contactEmail: '', phone: '' });
   const [purchaseForm, setPurchaseForm] = useState({ supplierId: '', warehouseId: '', expectedDate: '', productId: '', quantity: 1 });
@@ -275,6 +277,32 @@ function App() {
       setReceiveForm({ productId: '', quantity: 1, reference: '', batchNumber: '', expiryDate: '' });
       await loadAll();
     }, 'Stock received and put away.');
+  }
+
+  async function adjustStock(event) {
+    event.preventDefault();
+    await run(async () => {
+      await apiRequest('/inventory/adjust', {
+        method: 'POST',
+        token,
+        body: normalizeIds(adjustForm, ['productId', 'binId'])
+      });
+      setAdjustForm({ productId: '', binId: '', quantityDelta: 0, reason: '' });
+      await loadAll();
+    }, 'Stock adjustment recorded.');
+  }
+
+  async function transferStock(event) {
+    event.preventDefault();
+    await run(async () => {
+      await apiRequest('/inventory/transfer', {
+        method: 'POST',
+        token,
+        body: normalizeIds(transferForm, ['productId', 'fromBinId', 'toBinId'])
+      });
+      setTransferForm({ productId: '', fromBinId: '', toBinId: '', quantity: 1, reference: '' });
+      await loadAll();
+    }, 'Stock transferred between bins.');
   }
 
   async function createOrder(event) {
@@ -549,12 +577,19 @@ function App() {
         )}
         {activeTab === 'receiving' && (
           <Receiving
+            isAdmin={isAdmin}
             products={products}
             bins={bins}
             inventory={inventory}
             receiveForm={receiveForm}
             setReceiveForm={setReceiveForm}
+            adjustForm={adjustForm}
+            setAdjustForm={setAdjustForm}
+            transferForm={transferForm}
+            setTransferForm={setTransferForm}
             receiveStock={receiveStock}
+            adjustStock={adjustStock}
+            transferStock={transferStock}
           />
         )}
         {activeTab === 'orders' && (
@@ -874,19 +909,57 @@ const Warehouse = memo(function Warehouse(props) {
   );
 });
 
-const Receiving = memo(function Receiving({ products, bins, inventory, receiveForm, setReceiveForm, receiveStock }) {
+const Receiving = memo(function Receiving({
+  isAdmin,
+  products,
+  bins,
+  inventory,
+  receiveForm,
+  setReceiveForm,
+  adjustForm,
+  setAdjustForm,
+  transferForm,
+  setTransferForm,
+  receiveStock,
+  adjustStock,
+  transferStock
+}) {
+  const productOptions = products.map((product) => [product.id, `${product.sku} - ${product.name}`]);
+  const binOptions = bins.map((bin) => [bin.id, `${bin.code} (${bin.availableCapacity} free)`]);
+
   return (
     <div className="split-view">
       <section className="panel">
         <PanelTitle icon={ScanBarcode} title="Receive Shipment" />
         <form onSubmit={receiveStock} className="form-grid">
-          <Select required value={receiveForm.productId} onChange={(productId) => setReceiveForm({ ...receiveForm, productId })} label="Product" options={products.map((product) => [product.id, product.sku])} />
+          <Select required value={receiveForm.productId} onChange={(productId) => setReceiveForm({ ...receiveForm, productId })} label="Product" options={productOptions} />
           <input required type="number" min="1" placeholder="Quantity" value={receiveForm.quantity} onChange={(event) => setReceiveForm({ ...receiveForm, quantity: Number(event.target.value) })} />
           <input maxLength="120" placeholder="Reference" value={receiveForm.reference} onChange={(event) => setReceiveForm({ ...receiveForm, reference: event.target.value })} />
           <input maxLength="80" placeholder="Batch number" value={receiveForm.batchNumber} onChange={(event) => setReceiveForm({ ...receiveForm, batchNumber: event.target.value })} />
           <input type="date" value={receiveForm.expiryDate} onChange={(event) => setReceiveForm({ ...receiveForm, expiryDate: event.target.value })} />
           <button type="submit"><CheckCircle2 size={18} />Receive</button>
         </form>
+        <div className="operations-grid">
+          {isAdmin && (
+            <form onSubmit={adjustStock} className="compact-form">
+              <PanelTitle icon={Boxes} title="Stock Adjustment" />
+              <Select required value={adjustForm.productId} onChange={(productId) => setAdjustForm({ ...adjustForm, productId })} label="Product" options={productOptions} />
+              <Select required value={adjustForm.binId} onChange={(binId) => setAdjustForm({ ...adjustForm, binId })} label="Bin" options={binOptions} />
+              <input required type="number" placeholder="Delta (+/-)" value={adjustForm.quantityDelta} onChange={(event) => setAdjustForm({ ...adjustForm, quantityDelta: Number(event.target.value) })} />
+              <input maxLength="120" placeholder="Reason" value={adjustForm.reason} onChange={(event) => setAdjustForm({ ...adjustForm, reason: event.target.value })} />
+              <button type="submit"><Pencil size={18} />Adjust</button>
+            </form>
+          )}
+          <form onSubmit={transferStock} className="compact-form">
+            <PanelTitle icon={RefreshCw} title="Bin Transfer" />
+            <Select required value={transferForm.productId} onChange={(productId) => setTransferForm({ ...transferForm, productId })} label="Product" options={productOptions} />
+            <Select required value={transferForm.fromBinId} onChange={(fromBinId) => setTransferForm({ ...transferForm, fromBinId })} label="From bin" options={binOptions} />
+            <Select required value={transferForm.toBinId} onChange={(toBinId) => setTransferForm({ ...transferForm, toBinId })} label="To bin" options={binOptions} />
+            <input required type="number" min="1" placeholder="Quantity" value={transferForm.quantity} onChange={(event) => setTransferForm({ ...transferForm, quantity: Number(event.target.value) })} />
+            <input maxLength="120" placeholder="Reference" value={transferForm.reference} onChange={(event) => setTransferForm({ ...transferForm, reference: event.target.value })} />
+            <button type="submit"><RefreshCw size={18} />Transfer</button>
+          </form>
+        </div>
         <div className="bin-summary">
           {bins.map((bin) => (
             <span key={bin.id}>{bin.code}: {bin.availableCapacity}</span>

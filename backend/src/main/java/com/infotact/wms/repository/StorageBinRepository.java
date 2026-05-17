@@ -3,6 +3,7 @@ package com.infotact.wms.repository;
 import com.infotact.wms.domain.StorageBin;
 import jakarta.persistence.LockModeType;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -18,12 +19,38 @@ public interface StorageBinRepository extends JpaRepository<StorageBin, Long> {
         from StorageBin b
         join fetch b.aisle a
         join fetch a.zone z
+        join fetch z.warehouse
+        where b.id = :id
+        """)
+    Optional<StorageBin> findByIdForUpdate(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        select b
+        from StorageBin b
+        join fetch b.aisle a
+        join fetch a.zone z
         join fetch z.warehouse w
         where w.id = :warehouseId and b.capacity - b.usedCapacity >= :requiredCapacity
         order by (b.capacity - b.usedCapacity) desc
         """)
     List<StorageBin> findPutawayCandidatesForUpdate(
         @Param("warehouseId") Long warehouseId,
+        @Param("requiredCapacity") int requiredCapacity,
+        Pageable pageable
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        select b
+        from StorageBin b
+        join fetch b.aisle a
+        join fetch a.zone z
+        join fetch z.warehouse
+        where b.capacity - b.usedCapacity >= :requiredCapacity
+        order by (b.capacity - b.usedCapacity) desc
+        """)
+    List<StorageBin> findPutawayCandidatesForUpdate(
         @Param("requiredCapacity") int requiredCapacity,
         Pageable pageable
     );

@@ -1,8 +1,11 @@
 package com.infotact.wms.api;
 
+import com.infotact.wms.api.dto.InventoryActionResponse;
 import com.infotact.wms.api.dto.InventorySnapshotResponse;
 import com.infotact.wms.api.dto.ReceiveStockRequest;
 import com.infotact.wms.api.dto.ReceiveStockResponse;
+import com.infotact.wms.api.dto.StockAdjustmentRequest;
+import com.infotact.wms.api.dto.StockTransferRequest;
 import com.infotact.wms.service.InventoryService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -31,5 +34,17 @@ public class InventoryController {
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ReceiveStockResponse receive(@Valid @RequestBody ReceiveStockRequest request) {
         return inventoryService.receive(request);
+    }
+
+    @PostMapping("/adjust")
+    @PreAuthorize("hasRole('ADMIN')")
+    public InventoryActionResponse adjust(@Valid @RequestBody StockAdjustmentRequest request) {
+        return inventoryService.adjust(request);
+    }
+
+    @PostMapping("/transfer")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public InventoryActionResponse transfer(@Valid @RequestBody StockTransferRequest request) {
+        return inventoryService.transfer(request);
     }
 }

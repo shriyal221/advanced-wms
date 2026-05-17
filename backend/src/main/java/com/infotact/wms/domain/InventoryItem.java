@@ -123,4 +123,15 @@ public class InventoryItem {
         updatedAt = Instant.now();
         return removed;
     }
+
+    public void decrease(int amount) {
+        if (amount < 1) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+        if (getAvailableQuantity() < amount) {
+            throw new IllegalStateException("Not enough available inventory.");
+        }
+        quantity -= amount;
+        updatedAt = Instant.now();
+    }
 }
