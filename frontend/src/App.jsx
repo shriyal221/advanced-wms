@@ -1016,60 +1016,174 @@ const Warehouse = memo(function Warehouse(props) {
     createBin
   } = props;
 
+  const [activeTab, setActiveTab] = useState('zone');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedZone, setSelectedZone] = useState('ALL');
+
+  const filteredBins = bins.filter((bin) => {
+    const matchesSearch = bin.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesZone = selectedZone === 'ALL' || String(bin.zoneCode) === String(selectedZone);
+    return matchesSearch && matchesZone;
+  });
+
   return (
-    <div className="view-grid">
+    <div className="split-view">
       {isAdmin && (
-        <section className="panel wide">
-          <PanelTitle icon={Building2} title="Location Setup" />
-          <div className="setup-grid">
-            <form onSubmit={createZone} className="form-grid">
-              <Select required value={zoneForm.warehouseId} onChange={(warehouseId) => setZoneForm({ ...zoneForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
-              <input required pattern="^[A-Za-z0-9._-]+$" maxLength="40" placeholder="Zone code" value={zoneForm.code} onChange={(event) => setZoneForm({ ...zoneForm, code: event.target.value })} />
-              <input required maxLength="120" placeholder="Zone name" value={zoneForm.name} onChange={(event) => setZoneForm({ ...zoneForm, name: event.target.value })} />
-              <button type="submit"><Plus size={18} />Zone</button>
-            </form>
-            <form onSubmit={createAisle} className="form-grid">
-              <Select required value={aisleForm.zoneId} onChange={(zoneId) => setAisleForm({ ...aisleForm, zoneId })} label="Zone" options={zones.map((zone) => [zone.id, zone.code])} />
-              <input required pattern="^[A-Za-z0-9._-]+$" maxLength="40" placeholder="Aisle code" value={aisleForm.code} onChange={(event) => setAisleForm({ ...aisleForm, code: event.target.value })} />
-              <button type="submit"><Plus size={18} />Aisle</button>
-            </form>
-            <form onSubmit={createBin} className="form-grid">
-              <Select required value={binForm.aisleId} onChange={(aisleId) => setBinForm({ ...binForm, aisleId })} label="Aisle" options={aisles.map((aisle) => [aisle.id, aisle.code])} />
-              <input required pattern="^[A-Za-z0-9._-]+$" maxLength="60" placeholder="Bin code" value={binForm.code} onChange={(event) => setBinForm({ ...binForm, code: event.target.value })} />
-              <input required type="number" min="1" placeholder="Capacity" value={binForm.capacity} onChange={(event) => setBinForm({ ...binForm, capacity: Number(event.target.value) })} />
-              <button type="submit"><Plus size={18} />Bin</button>
-            </form>
+        <section className="panel" style={{ flex: '0 0 350px' }}>
+          <div className="form-toggle-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-light)', paddingBottom: '10px' }}>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeTab === 'zone' ? 'active' : ''}`}
+              onClick={() => setActiveTab('zone')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeTab === 'zone' ? 'var(--primary-color)' : 'transparent', color: activeTab === 'zone' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              Zone
+            </button>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeTab === 'aisle' ? 'active' : ''}`}
+              onClick={() => setActiveTab('aisle')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeTab === 'aisle' ? 'var(--primary-color)' : 'transparent', color: activeTab === 'aisle' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              Aisle
+            </button>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeTab === 'bin' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bin')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeTab === 'bin' ? 'var(--primary-color)' : 'transparent', color: activeTab === 'bin' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              Bin
+            </button>
           </div>
+
+          {activeTab === 'zone' && (
+            <>
+              <PanelTitle icon={Building2} title="Create Zone" />
+              <form onSubmit={createZone} className="form-grid" style={{ gap: '10px' }}>
+                <Select required value={zoneForm.warehouseId} onChange={(warehouseId) => setZoneForm({ ...zoneForm, warehouseId })} label="Warehouse" options={warehouses.map((w) => [w.id, w.code])} />
+                <input required pattern="^[A-Za-z0-9._-]+$" maxLength="40" placeholder="Zone Code" value={zoneForm.code} onChange={(event) => setZoneForm({ ...zoneForm, code: event.target.value })} />
+                <input required maxLength="120" placeholder="Zone Name" value={zoneForm.name} onChange={(event) => setZoneForm({ ...zoneForm, name: event.target.value })} />
+                <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Add Zone</button>
+              </form>
+            </>
+          )}
+
+          {activeTab === 'aisle' && (
+            <>
+              <PanelTitle icon={Building2} title="Create Aisle" />
+              <form onSubmit={createAisle} className="form-grid" style={{ gap: '10px' }}>
+                <Select required value={aisleForm.zoneId} onChange={(zoneId) => setAisleForm({ ...aisleForm, zoneId })} label="Zone" options={zones.map((z) => [z.id, z.code])} />
+                <input required pattern="^[A-Za-z0-9._-]+$" maxLength="40" placeholder="Aisle Code" value={aisleForm.code} onChange={(event) => setAisleForm({ ...aisleForm, code: event.target.value })} />
+                <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Add Aisle</button>
+              </form>
+            </>
+          )}
+
+          {activeTab === 'bin' && (
+            <>
+              <PanelTitle icon={Building2} title="Create Bin" />
+              <form onSubmit={createBin} className="form-grid" style={{ gap: '10px' }}>
+                <Select required value={binForm.aisleId} onChange={(aisleId) => setBinForm({ ...binForm, aisleId })} label="Aisle" options={aisles.map((a) => [a.id, a.code])} />
+                <input required pattern="^[A-Za-z0-9._-]+$" maxLength="60" placeholder="Bin Code" value={binForm.code} onChange={(event) => setBinForm({ ...binForm, code: event.target.value })} />
+                <input required type="number" min="1" placeholder="Capacity" value={binForm.capacity} onChange={(event) => setBinForm({ ...binForm, capacity: Number(event.target.value) })} />
+                <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Add Bin</button>
+              </form>
+            </>
+          )}
         </section>
       )}
-      <section className="panel wide">
-        <PanelTitle icon={Building2} title="Storage Map" />
-        <table>
-          <thead>
-            <tr>
-              <th>Bin</th>
-              <th>Warehouse</th>
-              <th>Zone</th>
-              <th>Aisle</th>
-              <th>Status</th>
-              <th>Capacity</th>
-              <th>Available</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bins.map((bin) => (
-              <tr key={bin.id}>
-                <td>{bin.code}</td>
-                <td>{bin.warehouseCode}</td>
-                <td>{bin.zoneCode}</td>
-                <td>{bin.aisleCode}</td>
-                <td>{bin.status}</td>
-                <td>{bin.capacity}</td>
-                <td>{bin.availableCapacity}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <section className={isAdmin ? "panel" : "panel wide"} style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <PanelTitle icon={Building2} title={`Storage Map (${filteredBins.length})`} />
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <input 
+              type="text" 
+              placeholder="Search Bin..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              style={{ width: '150px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
+            />
+            <select 
+              value={selectedZone} 
+              onChange={(e) => setSelectedZone(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'white', fontSize: '0.9rem' }}
+            >
+              <option value="ALL">All Zones</option>
+              {zones.map((z) => (
+                <option key={z.id} value={z.code}>{z.code}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {filteredBins.length === 0 ? (
+          <div className="empty-state">
+            <Building2 size={40} className="muted" />
+            <p>No storage bins configured.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+            {filteredBins.map((bin) => {
+              const usedCapacity = bin.capacity - bin.availableCapacity;
+              const usedRatio = usedCapacity / bin.capacity;
+              const fillPercent = Math.min(100, Math.round(usedRatio * 100));
+              let statusColor = '#10B981'; // Green (empty/light)
+              let statusBg = 'rgba(16, 185, 129, 0.1)';
+              if (usedRatio >= 0.9) {
+                statusColor = '#EF4444'; // Red (nearly full)
+                statusBg = 'rgba(239, 68, 68, 0.1)';
+              } else if (usedRatio >= 0.6) {
+                statusColor = '#F59E0B'; // Orange (medium)
+                statusBg = 'rgba(245, 158, 11, 0.1)';
+              }
+
+              return (
+                <div 
+                  key={bin.id}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.45)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>{bin.code}</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: statusColor, background: statusBg, padding: '2px 6px', borderRadius: '4px' }}>
+                        {bin.status}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                      Zone: <strong>{bin.zoneCode}</strong> &bull; Aisle: <strong>{bin.aisleCode}</strong>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                      Warehouse: <strong>{bin.warehouseCode}</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#666', marginBottom: '4px' }}>
+                      <span>Utilization</span>
+                      <span>{usedCapacity} / {bin.capacity}</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${fillPercent}%`, height: '100%', background: statusColor, borderRadius: '3px', transition: 'width 0.3s' }} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -1090,93 +1204,236 @@ const Receiving = memo(function Receiving({
   adjustStock,
   transferStock
 }) {
+  const [activeFormTab, setActiveFormTab] = useState('receive');
+  const [searchTerm, setSearchTerm] = useState('');
+  
   const productOptions = products.map((product) => [product.id, `${product.sku} - ${product.name}`]);
   const binOptions = bins.map((bin) => [bin.id, `${bin.code} (${bin.availableCapacity} free)`]);
 
+  const filteredInventory = inventory.filter((row) => {
+    return row.sku.toLowerCase().includes(searchTerm.toLowerCase()) || 
+           row.productName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+           row.binCode.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
   return (
     <div className="split-view">
-      <section className="panel">
-        <PanelTitle icon={ScanBarcode} title="Receive Shipment" />
-        <form onSubmit={receiveStock} className="form-grid">
-          <Select required value={receiveForm.productId} onChange={(productId) => setReceiveForm({ ...receiveForm, productId })} label="Product" options={productOptions} />
-          <input required type="number" min="1" placeholder="Quantity" value={receiveForm.quantity} onChange={(event) => setReceiveForm({ ...receiveForm, quantity: Number(event.target.value) })} />
-          <input maxLength="120" placeholder="Reference" value={receiveForm.reference} onChange={(event) => setReceiveForm({ ...receiveForm, reference: event.target.value })} />
-          <input maxLength="80" placeholder="Batch number" value={receiveForm.batchNumber} onChange={(event) => setReceiveForm({ ...receiveForm, batchNumber: event.target.value })} />
-          <input type="date" value={receiveForm.expiryDate} onChange={(event) => setReceiveForm({ ...receiveForm, expiryDate: event.target.value })} />
-          <button type="submit"><CheckCircle2 size={18} />Receive</button>
-        </form>
-        <div className="operations-grid">
+      <section className="panel" style={{ flex: '0 0 360px' }}>
+        <div className="form-toggle-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-light)', paddingBottom: '10px' }}>
+          <button 
+            type="button" 
+            className={`tab-btn ${activeFormTab === 'receive' ? 'active' : ''}`}
+            onClick={() => setActiveFormTab('receive')}
+            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'receive' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'receive' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+          >
+            Receive
+          </button>
           {isAdmin && (
-            <form onSubmit={adjustStock} className="compact-form">
-              <PanelTitle icon={Boxes} title="Stock Adjustment" />
+            <button 
+              type="button" 
+              className={`tab-btn ${activeFormTab === 'adjust' ? 'active' : ''}`}
+              onClick={() => setActiveFormTab('adjust')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'adjust' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'adjust' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+            >
+              Adjust
+            </button>
+          )}
+          <button 
+            type="button" 
+            className={`tab-btn ${activeFormTab === 'transfer' ? 'active' : ''}`}
+            onClick={() => setActiveFormTab('transfer')}
+            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'transfer' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'transfer' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+          >
+            Transfer
+          </button>
+        </div>
+
+        {activeFormTab === 'receive' && (
+          <>
+            <PanelTitle icon={ScanBarcode} title="Receive Shipment" />
+            <form onSubmit={receiveStock} className="form-grid" style={{ gap: '10px' }}>
+              <Select required value={receiveForm.productId} onChange={(productId) => setReceiveForm({ ...receiveForm, productId })} label="Product" options={productOptions} />
+              <input required type="number" min="1" placeholder="Quantity" value={receiveForm.quantity} onChange={(event) => setReceiveForm({ ...receiveForm, quantity: Number(event.target.value) })} />
+              <input maxLength="120" placeholder="Reference" value={receiveForm.reference} onChange={(event) => setReceiveForm({ ...receiveForm, reference: event.target.value })} />
+              <input maxLength="80" placeholder="Batch Number" value={receiveForm.batchNumber} onChange={(event) => setReceiveForm({ ...receiveForm, batchNumber: event.target.value })} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Expiry Date</label>
+                <input type="date" value={receiveForm.expiryDate} onChange={(event) => setReceiveForm({ ...receiveForm, expiryDate: event.target.value })} />
+              </div>
+              <button type="submit" style={{ marginTop: '10px' }}><CheckCircle2 size={18} />Receive Stock</button>
+            </form>
+          </>
+        )}
+
+        {activeFormTab === 'adjust' && isAdmin && (
+          <>
+            <PanelTitle icon={Boxes} title="Stock Adjustment" />
+            <form onSubmit={adjustStock} className="form-grid" style={{ gap: '10px' }}>
               <Select required value={adjustForm.productId} onChange={(productId) => setAdjustForm({ ...adjustForm, productId })} label="Product" options={productOptions} />
               <Select required value={adjustForm.binId} onChange={(binId) => setAdjustForm({ ...adjustForm, binId })} label="Bin" options={binOptions} />
-              <input required type="number" placeholder="Delta (+/-)" value={adjustForm.quantityDelta} onChange={(event) => setAdjustForm({ ...adjustForm, quantityDelta: Number(event.target.value) })} />
-              <input maxLength="120" placeholder="Reason" value={adjustForm.reason} onChange={(event) => setAdjustForm({ ...adjustForm, reason: event.target.value })} />
-              <button type="submit"><Pencil size={18} />Adjust</button>
+              <input required type="number" placeholder="Quantity Delta (+/-)" value={adjustForm.quantityDelta} onChange={(event) => setAdjustForm({ ...adjustForm, quantityDelta: Number(event.target.value) })} />
+              <input maxLength="120" placeholder="Reason for Adjustment" value={adjustForm.reason} onChange={(event) => setAdjustForm({ ...adjustForm, reason: event.target.value })} />
+              <button type="submit" style={{ marginTop: '10px' }}><Pencil size={18} />Apply Adjustment</button>
             </form>
-          )}
-          <form onSubmit={transferStock} className="compact-form">
+          </>
+        )}
+
+        {activeFormTab === 'transfer' && (
+          <>
             <PanelTitle icon={RefreshCw} title="Bin Transfer" />
-            <Select required value={transferForm.productId} onChange={(productId) => setTransferForm({ ...transferForm, productId })} label="Product" options={productOptions} />
-            <Select required value={transferForm.fromBinId} onChange={(fromBinId) => setTransferForm({ ...transferForm, fromBinId })} label="From bin" options={binOptions} />
-            <Select required value={transferForm.toBinId} onChange={(toBinId) => setTransferForm({ ...transferForm, toBinId })} label="To bin" options={binOptions} />
-            <input required type="number" min="1" placeholder="Quantity" value={transferForm.quantity} onChange={(event) => setTransferForm({ ...transferForm, quantity: Number(event.target.value) })} />
-            <input maxLength="120" placeholder="Reference" value={transferForm.reference} onChange={(event) => setTransferForm({ ...transferForm, reference: event.target.value })} />
-            <button type="submit"><RefreshCw size={18} />Transfer</button>
-          </form>
-        </div>
-        <div className="bin-summary">
-          {bins.map((bin) => (
-            <span key={bin.id}>{bin.code}: {bin.availableCapacity}</span>
-          ))}
-        </div>
+            <form onSubmit={transferStock} className="form-grid" style={{ gap: '10px' }}>
+              <Select required value={transferForm.productId} onChange={(productId) => setTransferForm({ ...transferForm, productId })} label="Product" options={productOptions} />
+              <Select required value={transferForm.fromBinId} onChange={(fromBinId) => setTransferForm({ ...transferForm, fromBinId })} label="From Bin" options={binOptions} />
+              <Select required value={transferForm.toBinId} onChange={(toBinId) => setTransferForm({ ...transferForm, toBinId })} label="To Bin" options={binOptions} />
+              <input required type="number" min="1" placeholder="Quantity" value={transferForm.quantity} onChange={(event) => setTransferForm({ ...transferForm, quantity: Number(event.target.value) })} />
+              <input maxLength="120" placeholder="Transfer Reference" value={transferForm.reference} onChange={(event) => setTransferForm({ ...transferForm, reference: event.target.value })} />
+              <button type="submit" style={{ marginTop: '10px' }}><RefreshCw size={18} />Execute Transfer</button>
+            </form>
+          </>
+        )}
       </section>
-      <section className="panel wide">
-        <PanelTitle icon={PackageSearch} title="Current Inventory" />
-        <InventoryTable inventory={inventory} />
+
+      <section className="panel wide" style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <PanelTitle icon={PackageSearch} title={`Current Inventory (${filteredInventory.length})`} />
+          <input 
+            type="text" 
+            placeholder="Search SKU, Product, or Bin..." 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            style={{ width: '220px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
+          />
+        </div>
+
+        <InventoryTable inventory={filteredInventory} />
       </section>
     </div>
   );
 });
 
 const Orders = memo(function Orders({ warehouses, products, orders, orderForm, setOrderForm, createOrder, transitionOrder }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredOrders = orders.filter((order) => {
+    const term = searchTerm.toLowerCase();
+    const matchesNumber = order.orderNumber.toLowerCase().includes(term);
+    const matchesSku = order.lines.some((line) => line.sku.toLowerCase().includes(term));
+    return matchesNumber || matchesSku;
+  });
+
   return (
     <div className="split-view">
-      <section className="panel">
-        <PanelTitle icon={ClipboardList} title="Create Order" />
-        <form onSubmit={createOrder} className="form-grid">
-          <Select required value={orderForm.warehouseId} onChange={(warehouseId) => setOrderForm({ ...orderForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
-          <input type="datetime-local" value={orderForm.expectedShipDate} onChange={(event) => setOrderForm({ ...orderForm, expectedShipDate: event.target.value })} />
-          <Select required value={orderForm.productId} onChange={(productId) => setOrderForm({ ...orderForm, productId })} label="Product" options={products.map((product) => [product.id, product.sku])} />
+      <section className="panel" style={{ flex: '0 0 350px' }}>
+        <PanelTitle icon={ClipboardList} title="Create Outbound Order" />
+        <form onSubmit={createOrder} className="form-grid" style={{ gap: '12px' }}>
+          <Select required value={orderForm.warehouseId} onChange={(warehouseId) => setOrderForm({ ...orderForm, warehouseId })} label="Warehouse" options={warehouses.map((w) => [w.id, w.code])} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Expected Ship Date</label>
+            <input type="datetime-local" value={orderForm.expectedShipDate} onChange={(event) => setOrderForm({ ...orderForm, expectedShipDate: event.target.value })} />
+          </div>
+          <Select required value={orderForm.productId} onChange={(productId) => setOrderForm({ ...orderForm, productId })} label="Select Product SKU" options={products.map((p) => [p.id, p.sku])} />
           <input required type="number" min="1" placeholder="Quantity" value={orderForm.quantity} onChange={(event) => setOrderForm({ ...orderForm, quantity: Number(event.target.value) })} />
-          <button type="submit"><Plus size={18} />Order</button>
+          <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Create Order</button>
         </form>
       </section>
-      <section className="panel wide">
-        <PanelTitle icon={Truck} title="Fulfillment Queue" />
-        <div className="order-list">
-          {orders.map((order) => (
-            <article key={order.id} className="order-row">
-              <div>
-                <strong>{order.orderNumber}</strong>
-                <span>{order.warehouseCode || 'Warehouse'} - {order.lines.map((line) => `${line.sku} x ${line.requestedQuantity}`).join(', ')}</span>
-              </div>
-              <b className={`status ${order.status.toLowerCase()}`}>{order.status}</b>
-              <div className="row-actions">
-                <button onClick={() => transitionOrder(order.id, 'start-picking', 'Order moved to picking.')} disabled={order.status !== 'PENDING'} title="Start picking">
-                  <PackageSearch size={16} />
-                </button>
-                <button onClick={() => transitionOrder(order.id, 'pack', 'Order packed and stock decremented.')} disabled={order.status === 'PACKED' || order.status === 'SHIPPED'} title="Pack order">
-                  <Boxes size={16} />
-                </button>
-                <button onClick={() => transitionOrder(order.id, 'ship', 'Order shipped.')} disabled={order.status !== 'PACKED'} title="Ship order">
-                  <Truck size={16} />
-                </button>
-              </div>
-            </article>
-          ))}
+
+      <section className="panel wide" style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <PanelTitle icon={Truck} title={`Fulfillment Queue (${filteredOrders.length})`} />
+          <input 
+            type="text" 
+            placeholder="Search Order # or SKU..." 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            style={{ width: '200px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
+          />
         </div>
+
+        {filteredOrders.length === 0 ? (
+          <div className="empty-state">
+            <ClipboardList size={40} className="muted" />
+            <p>No outbound orders in the queue.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {filteredOrders.map((order) => {
+              const status = order.status.toUpperCase();
+              let statusColor = '#F59E0B'; // Orange PENDING
+              let statusBg = 'rgba(245, 158, 11, 0.1)';
+              if (status === 'PICKING') {
+                statusColor = '#3B82F6'; // Blue
+                statusBg = 'rgba(59, 130, 246, 0.1)';
+              } else if (status === 'PACKED') {
+                statusColor = '#8B5CF6'; // Purple
+                statusBg = 'rgba(139, 92, 246, 0.1)';
+              } else if (status === 'SHIPPED') {
+                statusColor = '#10B981'; // Green
+                statusBg = 'rgba(16, 185, 129, 0.1)';
+              }
+
+              return (
+                <div 
+                  key={order.id} 
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.45)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '16px'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{order.orderNumber}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: statusColor, background: statusBg, padding: '3px 8px', borderRadius: '6px' }}>
+                        {status}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                      Warehouse: <strong style={{ color: 'var(--text-primary)' }}>{order.warehouseCode || 'BLR-01'}</strong> &bull; 
+                      Items: <strong style={{ color: 'var(--text-primary)' }}>
+                        {order.lines.map((line) => `${line.sku} (x${line.requestedQuantity})`).join(', ')}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button 
+                      onClick={() => transitionOrder(order.id, 'start-picking', 'Order moved to picking.')} 
+                      disabled={status !== 'PENDING'} 
+                      style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: status === 'PENDING' ? 'var(--primary-color)' : 'rgba(0,0,0,0.05)', color: status === 'PENDING' ? 'white' : '#aaa', cursor: status === 'PENDING' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                      title="Start Picking"
+                    >
+                      <PackageSearch size={14} /> Start Picking
+                    </button>
+                    <button 
+                      onClick={() => transitionOrder(order.id, 'pack', 'Order packed and stock decremented.')} 
+                      disabled={status === 'PACKED' || status === 'SHIPPED'} 
+                      style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: (status !== 'PACKED' && status !== 'SHIPPED') ? 'var(--primary-color)' : 'rgba(0,0,0,0.05)', color: (status !== 'PACKED' && status !== 'SHIPPED') ? 'white' : '#aaa', cursor: (status !== 'PACKED' && status !== 'SHIPPED') ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                      title="Pack Order"
+                    >
+                      <Boxes size={14} /> Pack
+                    </button>
+                    <button 
+                      onClick={() => transitionOrder(order.id, 'ship', 'Order shipped.')} 
+                      disabled={status !== 'PACKED'} 
+                      style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: status === 'PACKED' ? 'var(--primary-color)' : 'rgba(0,0,0,0.05)', color: status === 'PACKED' ? 'white' : '#aaa', cursor: status === 'PACKED' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                      title="Ship Out"
+                    >
+                      <Truck size={14} /> Ship
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -1197,63 +1454,148 @@ const Procurement = memo(function Procurement(props) {
     createPurchaseOrder
   } = props;
 
+  const [activeFormTab, setActiveFormTab] = useState('po');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredPOs = purchaseOrders.filter((po) => {
+    return po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+           po.warehouseCode.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
   return (
     <div className="split-view">
       {isAdmin && (
-        <section className="panel">
-          <PanelTitle icon={Factory} title="Supplier" />
-          <form onSubmit={createSupplier} className="form-grid">
-            <input required maxLength="160" placeholder="Supplier name" value={supplierForm.name} onChange={(event) => setSupplierForm({ ...supplierForm, name: event.target.value })} />
-            <input maxLength="255" placeholder="Address" value={supplierForm.address} onChange={(event) => setSupplierForm({ ...supplierForm, address: event.target.value })} />
-            <input type="email" maxLength="160" placeholder="Contact email" value={supplierForm.contactEmail} onChange={(event) => setSupplierForm({ ...supplierForm, contactEmail: event.target.value })} />
-            <input pattern="^[0-9+()\\-\\s]*$" maxLength="40" placeholder="Phone" value={supplierForm.phone} onChange={(event) => setSupplierForm({ ...supplierForm, phone: event.target.value })} />
-            <button type="submit"><Plus size={18} />Supplier</button>
-          </form>
+        <section className="panel" style={{ flex: '0 0 350px' }}>
+          <div className="form-toggle-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-light)', paddingBottom: '10px' }}>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeFormTab === 'po' ? 'active' : ''}`}
+              onClick={() => setActiveFormTab('po')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'po' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'po' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+            >
+              Purchase Order
+            </button>
+            <button 
+              type="button" 
+              className={`tab-btn ${activeFormTab === 'supplier' ? 'active' : ''}`}
+              onClick={() => setActiveFormTab('supplier')}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: activeFormTab === 'supplier' ? 'var(--primary-color)' : 'transparent', color: activeFormTab === 'supplier' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+            >
+              Supplier Details
+            </button>
+          </div>
 
-          <PanelTitle icon={ShoppingCart} title="Purchase Order" />
-          <form onSubmit={createPurchaseOrder} className="form-grid">
-            <Select required value={purchaseForm.supplierId} onChange={(supplierId) => setPurchaseForm({ ...purchaseForm, supplierId })} label="Supplier" options={suppliers.map((supplier) => [supplier.id, supplier.name])} />
-            <Select required value={purchaseForm.warehouseId} onChange={(warehouseId) => setPurchaseForm({ ...purchaseForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
-            <input type="datetime-local" value={purchaseForm.expectedDate} onChange={(event) => setPurchaseForm({ ...purchaseForm, expectedDate: event.target.value })} />
-            <Select required value={purchaseForm.productId} onChange={(productId) => setPurchaseForm({ ...purchaseForm, productId })} label="Product" options={products.map((product) => [product.id, product.sku])} />
-            <input required type="number" min="1" placeholder="Quantity" value={purchaseForm.quantity} onChange={(event) => setPurchaseForm({ ...purchaseForm, quantity: Number(event.target.value) })} />
-            <button type="submit"><Plus size={18} />Purchase order</button>
-          </form>
+          {activeFormTab === 'po' ? (
+            <>
+              <PanelTitle icon={ShoppingCart} title="Create Purchase Order" />
+              <form onSubmit={createPurchaseOrder} className="form-grid" style={{ gap: '10px' }}>
+                <Select required value={purchaseForm.supplierId} onChange={(supplierId) => setPurchaseForm({ ...purchaseForm, supplierId })} label="Select Supplier" options={suppliers.map((s) => [s.id, s.name])} />
+                <Select required value={purchaseForm.warehouseId} onChange={(warehouseId) => setPurchaseForm({ ...purchaseForm, warehouseId })} label="Select Warehouse" options={warehouses.map((w) => [w.id, w.code])} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Expected Date</label>
+                  <input type="datetime-local" value={purchaseForm.expectedDate} onChange={(event) => setPurchaseForm({ ...purchaseForm, expectedDate: event.target.value })} />
+                </div>
+                <Select required value={purchaseForm.productId} onChange={(productId) => setPurchaseForm({ ...purchaseForm, productId })} label="Select Product" options={products.map((p) => [p.id, p.sku])} />
+                <input required type="number" min="1" placeholder="Quantity" value={purchaseForm.quantity} onChange={(event) => setPurchaseForm({ ...purchaseForm, quantity: Number(event.target.value) })} />
+                <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Issue PO</button>
+              </form>
+            </>
+          ) : (
+            <>
+              <PanelTitle icon={Factory} title="Register Supplier" />
+              <form onSubmit={createSupplier} className="form-grid" style={{ gap: '10px' }}>
+                <input required maxLength="160" placeholder="Supplier Name" value={supplierForm.name} onChange={(event) => setSupplierForm({ ...supplierForm, name: event.target.value })} />
+                <input maxLength="255" placeholder="Address" value={supplierForm.address} onChange={(event) => setSupplierForm({ ...supplierForm, address: event.target.value })} />
+                <input type="email" maxLength="160" placeholder="Contact Email" value={supplierForm.contactEmail} onChange={(event) => setSupplierForm({ ...supplierForm, contactEmail: event.target.value })} />
+                <input pattern="^[0-9+()\\-\\s]*$" maxLength="40" placeholder="Phone" value={supplierForm.phone} onChange={(event) => setSupplierForm({ ...supplierForm, phone: event.target.value })} />
+                <button type="submit" style={{ marginTop: '10px' }}><Plus size={18} />Add Supplier</button>
+              </form>
+            </>
+          )}
         </section>
       )}
-      <section className="panel wide">
-        <PanelTitle icon={ShoppingCart} title="Purchase Orders" />
-        <table>
-          <thead>
-            <tr>
-              <th>PO</th>
-              <th>Supplier</th>
-              <th>Warehouse</th>
-              <th>Status</th>
-              <th>Items</th>
-            </tr>
-          </thead>
-          <tbody>
-            {purchaseOrders.map((po) => (
-              <tr key={po.id}>
-                <td>PO-{po.id}</td>
-                <td>{po.supplierName}</td>
-                <td>{po.warehouseCode}</td>
-                <td>{po.status}</td>
-                <td>{po.items.map((item) => `${item.sku} x ${item.quantity}`).join(', ')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <PanelTitle icon={Factory} title="Suppliers" />
-        <div className="stack">
-          {suppliers.map((supplier) => (
-            <div className="order-chip" key={supplier.id}>
-              <span>{supplier.name}</span>
-              <strong>{supplier.contactEmail || supplier.phone || 'Active'}</strong>
-            </div>
-          ))}
+
+      <section className="panel wide" style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <PanelTitle icon={ShoppingCart} title={`Purchase Orders (${filteredPOs.length})`} />
+          <input 
+            type="text" 
+            placeholder="Search Supplier or Warehouse..." 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            style={{ width: '220px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
+          />
         </div>
+
+        {filteredPOs.length === 0 ? (
+          <div className="empty-state" style={{ marginBottom: '30px' }}>
+            <ShoppingCart size={40} className="muted" />
+            <p>No purchase orders found.</p>
+          </div>
+        ) : (
+          <table style={{ marginBottom: '30px' }}>
+            <thead>
+              <tr>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Warehouse</th>
+                <th>Status</th>
+                <th>Items Ordered</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPOs.map((po) => (
+                <tr key={po.id}>
+                  <td><strong>PO-{po.id}</strong></td>
+                  <td>{po.supplierName}</td>
+                  <td>{po.warehouseCode}</td>
+                  <td>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: po.status === 'SHIPPED' ? '#10B981' : '#F59E0B', background: po.status === 'SHIPPED' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+                      {po.status}
+                    </span>
+                  </td>
+                  <td>{po.items.map((item) => `${item.sku} (x${item.quantity})`).join(', ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <PanelTitle icon={Factory} title={`Suppliers Directory (${suppliers.length})`} />
+        {suppliers.length === 0 ? (
+          <div className="empty-state">
+            <Factory size={40} className="muted" />
+            <p>No registered suppliers yet.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginTop: '12px' }}>
+            {suppliers.map((supplier) => (
+              <div 
+                key={supplier.id}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.45)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--text-primary)' }}>{supplier.name}</h4>
+                  <p style={{ fontSize: '0.75rem', color: '#666', margin: '0 0 8px 0', lineHeight: '1.3' }}>{supplier.address || 'No address registered.'}</p>
+                </div>
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  <div>📧 {supplier.contactEmail || 'N/A'}</div>
+                  <div>📞 {supplier.phone || 'N/A'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -1273,55 +1615,117 @@ const Users = memo(function Users(props) {
 
   return (
     <div className="split-view">
-      <section className="panel">
-        <PanelTitle icon={UserCog} title={editingUserId ? 'Edit User' : 'Create User'} />
-        <form onSubmit={saveUser} className="form-grid">
+      <section className="panel" style={{ flex: '0 0 350px' }}>
+        <PanelTitle icon={UserCog} title={editingUserId ? 'Edit User Profile' : 'Register New User'} />
+        <form onSubmit={saveUser} className="form-grid" style={{ gap: '10px' }}>
           <input required disabled={Boolean(editingUserId)} pattern="^[A-Za-z0-9][A-Za-z0-9._-]*$" maxLength="80" placeholder="Username" value={userForm.username} onChange={(event) => setUserForm({ ...userForm, username: event.target.value })} />
-          <input required={!editingUserId} type="password" minLength="6" maxLength="120" placeholder={editingUserId ? 'New password optional' : 'Password'} value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} />
-          <input required maxLength="160" placeholder="Full name" value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} />
-          <input type="email" maxLength="160" placeholder="Email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
-          <input pattern="^[0-9+()\\-\\s]*$" maxLength="40" placeholder="Phone" value={userForm.contactNumber} onChange={(event) => setUserForm({ ...userForm, contactNumber: event.target.value })} />
-          <Select required value={userForm.role} onChange={(role) => setUserForm({ ...userForm, role })} label="Role" options={[['ADMIN', 'Admin'], ['OPERATOR', 'Operator']]} />
-          <Select required value={userForm.status} onChange={(status) => setUserForm({ ...userForm, status })} label="Status" options={[['ACTIVE', 'Active'], ['INACTIVE', 'Inactive']]} />
-          <Select value={userForm.warehouseId} onChange={(warehouseId) => setUserForm({ ...userForm, warehouseId })} label="Warehouse" options={warehouses.map((warehouse) => [warehouse.id, warehouse.code])} />
-          <div className="button-row">
-            <button type="submit"><UserCog size={18} />{editingUserId ? 'Save user' : 'Add user'}</button>
-            {editingUserId && <button type="button" className="secondary" onClick={cancelUserEdit}>Cancel</button>}
+          <input required={!editingUserId} type="password" minLength="6" maxLength="120" placeholder={editingUserId ? 'New password (optional)' : 'Password'} value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} />
+          <input required maxLength="160" placeholder="Full Name" value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} />
+          <input type="email" maxLength="160" placeholder="Email Address" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
+          <input pattern="^[0-9+()\\-\\s]*$" maxLength="40" placeholder="Phone Number" value={userForm.contactNumber} onChange={(event) => setUserForm({ ...userForm, contactNumber: event.target.value })} />
+          <Select required value={userForm.role} onChange={(role) => setUserForm({ ...userForm, role })} label="Select Role" options={[['ADMIN', 'Admin'], ['OPERATOR', 'Operator']]} />
+          <Select required value={userForm.status} onChange={(status) => setUserForm({ ...userForm, status })} label="Select Status" options={[['ACTIVE', 'Active'], ['INACTIVE', 'Inactive']]} />
+          <Select value={userForm.warehouseId} onChange={(warehouseId) => setUserForm({ ...userForm, warehouseId })} label="Assign Warehouse" options={warehouses.map((w) => [w.id, w.code])} />
+          <div className="button-row" style={{ marginTop: '10px' }}>
+            <button type="submit" style={{ flex: 1 }}><UserCog size={18} />{editingUserId ? 'Save Profile' : 'Register User'}</button>
+            {editingUserId && <button type="button" className="secondary" onClick={cancelUserEdit} style={{ background: '#f3f4f6', border: 'none', color: '#4b5563', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>}
           </div>
         </form>
       </section>
-      <section className="panel wide">
-        <PanelTitle icon={UserCog} title="User Access" />
-        <table>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Warehouse</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.username}</td>
-                <td>{user.name}</td>
-                <td>{user.email || '-'}</td>
-                <td>{user.role}</td>
-                <td><span className={`status ${user.status.toLowerCase()}`}>{user.status}</span></td>
-                <td>{user.warehouseCode || '-'}</td>
-                <td>
-                  <button type="button" title={`Edit ${user.username}`} onClick={() => editUser(user)}>
-                    <Pencil size={16} />
+
+      <section className="panel wide" style={{ flex: 1 }}>
+        <PanelTitle icon={UserCog} title={`User Management Console (${users.length})`} />
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
+          {users.map((user) => {
+            const initials = user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+            const isActive = user.status.toUpperCase() === 'ACTIVE';
+
+            return (
+              <div 
+                key={user.id}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.45)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  position: 'relative'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, var(--primary-color), #8B5CF6)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: '0.95rem'
+                    }}>
+                      {initials}
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>{user.name}</h4>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>@{user.username}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3B82F6', background: 'rgba(59, 130, 246, 0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+                      {user.role}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isActive ? '#10B981' : '#EF4444', background: isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+                      {user.status}
+                    </span>
+                    {user.warehouseCode && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8B5CF6', background: 'rgba(139, 92, 246, 0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+                        {user.warehouseCode}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#666', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div>📧 {user.email || 'No email registered'}</div>
+                    <div>📞 {user.contactNumber || 'No phone registered'}</div>
+                  </div>
+                  <button 
+                    type="button" 
+                    title={`Edit ${user.username}`} 
+                    onClick={() => editUser(user)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'rgba(0, 0, 0, 0.04)',
+                      color: 'var(--text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
+                  >
+                    <Pencil size={14} />
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
     </div>
   );
