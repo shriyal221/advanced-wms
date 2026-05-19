@@ -1,26 +1,50 @@
-# Advanced Warehouse Management System
+# Advanced Warehouse Management System (WMS)
 
-Enterprise WMS project built from the PDF brief for Infotact's Java internship track. It implements the Project 1 scope: hierarchical warehouse storage, real-time inventory transactions, receiving and putaway, QR code generation, order fulfillment states, JWT security, tests, Docker, and CI.
+A state-of-the-art, enterprise-grade Multi-Tenant Warehouse Management System (WMS) designed to optimize warehouse storage, track real-time inventory movements, register dedicated tenants with isolated workspaces, manage users with granular roles, and provide full auditability via real-time transactional ledgers.
 
-## Stack
+Developed in compliance with the **Infotact Java Internship Track Project 1 brief**, this system is engineered for maximum throughput, sub-200ms scan workflows, and strict data security.
 
-- Backend: Java 17+, Spring Boot 3, Spring Web, Spring Data JPA, Spring Security, JWT, PostgreSQL
-- Frontend: React, Vite, Fetch API, Lucide icons
-- Testing: JUnit 5, Spring Boot Test, H2
-- DevOps: Docker Compose, GitHub Actions
+---
 
-## Features
+## 🚀 Key Features
 
-- Warehouse hierarchy: `Warehouse -> Zone -> Aisle -> StorageBin`
-- Product catalog with generated QR code images for every SKU
-- Transactional receiving service that locks candidate bins and updates stock atomically
-- Inventory ledger rows by product, bin, and warehouse
-- Fulfillment workflow: `PENDING -> PICKING -> PACKED -> SHIPPED`
-- Stock decremented when an order is packed, with `InsufficientStockException` rollback behavior
-- Role-based access for `ADMIN` and `OPERATOR`
-- Seed users and sample warehouse data for fast testing
+### 🏢 Multi-Tenant Data Isolation
+* **Strict Context Boundary**: All core domain entities—including Orders, Products, Warehouses, Storage Bins, Users, and Audit Logs—are logically isolated based on the authenticated user's warehouse context.
+* **Zero Leakage**: Cross-tenant queries are completely blocked. Operators and Admins can only view and manage resources explicitly belonging to their designated warehouse.
 
-## Run With Docker
+### 🔑 Unified Registration & Auto-Provisioning
+* **Self-Registration Flow**: New administrative accounts can register directly through the redesigned login portal.
+* **On-the-fly Warehouse Creation**: Upon sign-up, the system automatically provisions a brand new, dedicated warehouse tenant/workspace for the administrator.
+
+### 👥 Granular User & Role Management
+* **Role-Based Access Control (RBAC)**: Secure access limits features based on two roles:
+  * `ADMIN`: Full control over the designated warehouse, including operator creation, inventory management, product catalogs, and order dispatching.
+  * `OPERATOR`: Access to daily inventory operations, QR scanning, receiving, picking, packing, and shipping workflows.
+* **Operator Management Dashboard**: Admins can create, activate, and manage operator accounts locked specifically to their warehouse scope.
+
+### 📊 Real-Time Audit Logging & Ledger
+* **Transactional Ledger**: Every inventory adjustment, putaway, or shipment records an immutable audit ledger entry.
+* **Live System Audit Log**: Dedicated dashboard logs activity in real-time, filtered securely by warehouse, ensuring complete transparency and compliance.
+
+### 📦 Core WMS Engine
+* **Hierarchical Storage Model**: Organized as `Warehouse` ➡️ `Zone` ➡️ `Aisle` ➡️ `StorageBin` with detailed spatial coordinates.
+* **Smart Receiving & Putaway**: Transactional backend service matches incoming SKUs to candidate bins based on capacity and compatibility, executing writes atomically.
+* **Dynamic QR Code Engine**: Generates high-fidelity QR codes automatically using ZXing for every SKU upon product registration, enabling seamless scanning.
+* **Robust Order Fulfillment**: Complete order lifecycle tracking: `PENDING` ➡️ `PICKING` ➡️ `PACKED` ➡️ `SHIPPED`.
+* **Pessimistic Concurrency Controls**: Prevents double-allocation using database write locks (`PESSIMISTIC_WRITE`) and transaction rollbacks on `InsufficientStockException`.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Backend Engine**: Java 17+, Spring Boot 3, Spring Web, Spring Security (JWT-based stateless auth), Spring Data JPA, PostgreSQL
+* **Frontend Portal**: React 18, Vite, Vanilla CSS with custom glassmorphism design tokens, Lucide React Icons
+* **Testing Suite**: JUnit 5, Mockito, Spring Boot Integration Tests with H2 in-memory DB
+* **DevOps & Infrastructure**: Docker Compose, GitHub Actions CI/CD pipeline
+
+---
+
+## 🐳 Run With Docker
 
 ```bash
 docker compose up --build
@@ -28,25 +52,27 @@ docker compose up --build
 
 Then open:
 
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:8080`
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- **Frontend Portal**: `http://localhost:3000`
+- **Backend API**: `http://localhost:8080`
+- **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`
 
-Seed accounts:
+### Seed Accounts (For Instant Testing)
 
-- Admin: `admin` / `admin123`
-- Operator: `operator` / `operator123`
+- **Admin**: `admin` / `admin123`
+- **Operator**: `operator` / `operator123`
 
-## Run Locally
+---
 
-Backend requires Java 17+ and Maven.
+## 💻 Run Locally
+
+### Backend Requirements (Java 17+ and Maven)
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-Frontend requires Node 22+.
+### Frontend Requirements (Node 22+)
 
 ```bash
 cd frontend
@@ -65,7 +91,9 @@ scripts\run-frontend-local.cmd
 
 The helper backend script uses the `local` profile, PostgreSQL database `wms`, and backend port `8081`. The frontend helper points Vite to `http://localhost:8081/api`.
 
-## Environment
+---
+
+## ⚙️ Environment Configuration
 
 Copy `.env.example` to `.env` for Docker usage and replace the JWT secret before sharing or deploying.
 
@@ -77,37 +105,49 @@ Required production values:
 - `WMS_JWT_SECRET`
 - `JWT_EXPIRES_MINUTES`
 
-## API Flow
+---
 
-1. Login with `POST /api/auth/login`.
-2. Create or use seeded warehouse storage.
-3. Create products with `POST /api/products`.
-4. Receive inbound stock with `POST /api/inventory/receive`.
-5. Create orders with `POST /api/orders`.
-6. Move orders through `/start-picking`, `/pack`, and `/ship`.
+## 🔄 API Flow
 
-Example requests are in `docs/api.http`.
+1. **Login**: Login with `POST /api/auth/login` to obtain JWT.
+2. **Register Admin**: `POST /api/auth/register` creates an administrator account and auto-provisions a new Warehouse.
+3. **Manage Operators**: Admin creates operators with `POST /api/users` (scoped to warehouse).
+4. **Create Products**: Create products with `POST /api/products` (QR code auto-generated).
+5. **Receive Stock**: Receive inbound stock with `POST /api/inventory/receive` (atomically puts away to bins).
+6. **Create Orders**: Create orders with `POST /api/orders`.
+7. **Fulfill Orders**: Move orders through `/start-picking`, `/pack`, and `/ship` (updates ledger and decrements stock).
+8. **View Audit Logs**: View secured logs with `GET /api/audit-logs`.
 
-## PDF Requirement Alignment
+Example HTTP requests are documented in `docs/api.http`.
 
-- Project scope: Project 1, Enterprise Warehouse Management System.
-- Warehouse model: `Warehouse -> Zone -> Aisle -> StorageBin`.
-- Core entities: `Product`, `Warehouse`, `StorageBin`, `InventoryItem`, orders, users, suppliers, product categories, and purchase orders.
-- Receiving and putaway: transactional service assigns inbound stock to bins with available capacity.
-- Inventory integrity: pessimistic write locks and `@Transactional` methods protect stock changes.
-- Barcode/QR support: ZXing generates QR images for product SKUs.
-- Fulfillment: orders move through `PENDING -> PICKING -> PACKED -> SHIPPED`; packing decrements stock and raises `InsufficientStockException` when stock is unavailable.
-- Security: Spring Security with JWT and role-based `ADMIN` / `OPERATOR` access.
-- Frontend: React dashboard consumes the Spring Boot REST APIs.
-- Database: PostgreSQL for local and Docker runtime; H2 is used only by automated tests.
-- CI/CD: GitHub Actions runs backend tests and frontend production build.
+---
 
-## Response Time Check
+## 📋 PDF Requirement Alignment
 
-The PDF target says API response times should remain below 200 ms for scanning workflows. With the backend running, use this helper to take a quick local measurement:
+* **Project Scope**: Project 1, Enterprise Warehouse Management System.
+* **Warehouse Model**: `Warehouse -> Zone -> Aisle -> StorageBin`.
+* **Core Entities**: `Product`, `Warehouse`, `StorageBin`, `InventoryItem`, orders, users, suppliers, product categories, and purchase orders.
+* **Receiving and Putaway**: Transactional service assigns inbound stock to bins with available capacity.
+* **Inventory Integrity**: Pessimistic write locks and `@Transactional` methods protect stock changes.
+* **Barcode/QR Support**: ZXing generates QR images for product SKUs.
+* **Fulfillment**: Orders move through `PENDING -> PICKING -> PACKED -> SHIPPED`; packing decrements stock and raises `InsufficientStockException` when stock is unavailable.
+* **Security**: Spring Security with JWT and role-based `ADMIN` / `OPERATOR` access.
+* **Frontend**: Redesigned glassmorphic React dashboard consumes the Spring Boot REST APIs.
+* **Database**: PostgreSQL for local and Docker runtime; H2 is used only by automated tests.
+* **CI/CD**: GitHub Actions runs backend tests and frontend production build.
+* **Multi-Tenant Isolation**: Complete logical tenant isolation based on user's associated Warehouse context.
+* **User Management**: Administrative capability to register and manage operators per warehouse.
+* **Audit Logging**: Real-time, tenant-isolated transactional audit trail for absolute transparency.
+
+---
+
+## ⚡ Response Time & Performance Check
+
+The PDF target specifies that API response times should remain below 200 ms for scanning workflows. With the backend running, use this helper to take a quick local measurement:
 
 ```powershell
 .\scripts\check-api-performance.ps1 -BaseUrl http://localhost:8081 -Iterations 10
 ```
 
 The script logs in with the seeded admin account, calls common API endpoints, and reports average/max response time with a pass/fail status against the 200 ms target.
+
