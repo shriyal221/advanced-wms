@@ -18,7 +18,7 @@
     <description>Enterprise Warehouse Management System for inventory, putaway, barcode, and fulfillment workflows.</description>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
