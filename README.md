@@ -33,6 +33,13 @@ Developed in compliance with the **Infotact Java Internship Track Project 1 brie
 * **Robust Order Fulfillment**: Complete order lifecycle tracking: `PENDING` ➡️ `PICKING` ➡️ `PACKED` ➡️ `SHIPPED`.
 * **Pessimistic Concurrency Controls**: Prevents double-allocation using database write locks (`PESSIMISTIC_WRITE`) and transaction rollbacks on `InsufficientStockException`.
 
+### 🚚 Fleet Management & Route Optimization
+* **Fleet & Driver Registry**: Registers vehicles with different payload capacities, fuel types (Diesel, Petrol, Electric, CNG), and tracks active drivers with shifts and vehicles.
+* **Delivery Task Lifecycle**: Full tracking of outbound stops: `UNASSIGNED` ➡️ `DISPATCHED` ➡️ `IN_TRANSIT` ➡️ `DELIVERED` / `FAILED` with state machine validation.
+* **Route Optimization Engine**: Integrates with Open Source Routing Machine (OSRM) free APIs for distance matrices, solving the Traveling Salesperson Problem (TSP) using Nearest Neighbor and 2-opt search heuristics.
+* **Dynamic Fuel & Duration Estimations**: Auto-calculates trip distance, optimized waypoint order, driving times, and fuel consumption based on fuel type.
+* **Consolidated Manifests**: Generates structured, print-ready delivery manifests containing sequential stop orders, customer details, and special instructions.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -138,6 +145,8 @@ Example HTTP requests are documented in `docs/api.http`.
 * **Multi-Tenant Isolation**: Complete logical tenant isolation based on user's associated Warehouse context.
 * **User Management**: Administrative capability to register and manage operators per warehouse.
 * **Audit Logging**: Real-time, tenant-isolated transactional audit trail for absolute transparency.
+* **Fleet Management**: Fully featured fleet vehicle registry, driver shift planning, and task delivery assignments.
+* **Route Optimization**: Algorithmic route optimization engine integrating OSRM table/route APIs with TSP heuristic, reducing driving time and estimating fuel needs.
 
 ---
 
