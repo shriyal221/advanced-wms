@@ -12,7 +12,6 @@ import com.infotact.wms.repository.CustomerOrderRepository;
 import com.infotact.wms.repository.WarehouseRepository;
 import com.infotact.wms.repository.AppUserRepository;
 import com.infotact.wms.domain.AppUser;
-import com.infotact.wms.domain.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@SuppressWarnings("null")
 public class OrderService {
     private final CustomerOrderRepository customerOrderRepository;
     private final ProductService productService;

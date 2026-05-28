@@ -6,7 +6,6 @@ import com.infotact.wms.domain.Product;
 import com.infotact.wms.domain.ProductCategory;
 import com.infotact.wms.domain.PurchaseOrder;
 import com.infotact.wms.domain.PurchaseOrderItem;
-import com.infotact.wms.domain.PurchaseOrderStatus;
 import com.infotact.wms.domain.Role;
 import com.infotact.wms.domain.StorageBin;
 import com.infotact.wms.domain.Supplier;

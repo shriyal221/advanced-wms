@@ -106,6 +106,14 @@ public class InventoryItem {
         return expiryDate;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
     public void increase(int amount) {
         if (amount < 1) {
             throw new IllegalArgumentException("Amount must be positive.");

@@ -1,162 +1,265 @@
-# Advanced Warehouse Management System (WMS)
+# Fleet Management and Route Optimization Engine
 
-A state-of-the-art, enterprise-grade Multi-Tenant Warehouse Management System (WMS) designed to optimize warehouse storage, track real-time inventory movements, register dedicated tenants with isolated workspaces, manage users with granular roles, and provide full auditability via real-time transactional ledgers.
+[![Continuous Integration](https://github.com/shriyal221/advanced-wms/actions/workflows/ci.yml/badge.svg)](https://github.com/shriyal221/advanced-wms/actions/workflows/ci.yml)
+[![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Spring Boot 3.3.5](https://img.shields.io/badge/Spring%20Boot-3.3.5-green.svg)](https://spring.io/projects/spring-boot)
+[![Vite](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-blue.svg)](https://vitejs.dev)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-cyan.svg)](https://www.docker.com/)
 
-Developed in compliance with the **Infotact Java Internship Track Project 1 brief**, this system is engineered for maximum throughput, sub-200ms scan workflows, and strict data security.
-
----
-
-## 🚀 Key Features
-
-### 🏢 Multi-Tenant Data Isolation
-* **Strict Context Boundary**: All core domain entities—including Orders, Products, Warehouses, Storage Bins, Users, and Audit Logs—are logically isolated based on the authenticated user's warehouse context.
-* **Zero Leakage**: Cross-tenant queries are completely blocked. Operators and Admins can only view and manage resources explicitly belonging to their designated warehouse.
-
-### 🔑 Unified Registration & Auto-Provisioning
-* **Self-Registration Flow**: New administrative accounts can register directly through the redesigned login portal.
-* **On-the-fly Warehouse Creation**: Upon sign-up, the system automatically provisions a brand new, dedicated warehouse tenant/workspace for the administrator.
-
-### 👥 Granular User & Role Management
-* **Role-Based Access Control (RBAC)**: Secure access limits features based on two roles:
-  * `ADMIN`: Full control over the designated warehouse, including operator creation, inventory management, product catalogs, and order dispatching.
-  * `OPERATOR`: Access to daily inventory operations, QR scanning, receiving, picking, packing, and shipping workflows.
-* **Operator Management Dashboard**: Admins can create, activate, and manage operator accounts locked specifically to their warehouse scope.
-
-### 📊 Real-Time Audit Logging & Ledger
-* **Transactional Ledger**: Every inventory adjustment, putaway, or shipment records an immutable audit ledger entry.
-* **Live System Audit Log**: Dedicated dashboard logs activity in real-time, filtered securely by warehouse, ensuring complete transparency and compliance.
-
-### 📦 Core WMS Engine
-* **Hierarchical Storage Model**: Organized as `Warehouse` ➡️ `Zone` ➡️ `Aisle` ➡️ `StorageBin` with detailed spatial coordinates.
-* **Smart Receiving & Putaway**: Transactional backend service matches incoming SKUs to candidate bins based on capacity and compatibility, executing writes atomically.
-* **Dynamic QR Code Engine**: Generates high-fidelity QR codes automatically using ZXing for every SKU upon product registration, enabling seamless scanning.
-* **Robust Order Fulfillment**: Complete order lifecycle tracking: `PENDING` ➡️ `PICKING` ➡️ `PACKED` ➡️ `SHIPPED`.
-* **Pessimistic Concurrency Controls**: Prevents double-allocation using database write locks (`PESSIMISTIC_WRITE`) and transaction rollbacks on `InsufficientStockException`.
-
-### 🚚 Fleet Management & Route Optimization
-* **Fleet & Driver Registry**: Registers vehicles with different payload capacities, fuel types (Diesel, Petrol, Electric, CNG), and tracks active drivers with shifts and vehicles.
-* **Delivery Task Lifecycle**: Full tracking of outbound stops: `UNASSIGNED` ➡️ `DISPATCHED` ➡️ `IN_TRANSIT` ➡️ `DELIVERED` / `FAILED` with state machine validation.
-* **Route Optimization Engine**: Integrates with Open Source Routing Machine (OSRM) free APIs for distance matrices, solving the Traveling Salesperson Problem (TSP) using Nearest Neighbor and 2-opt search heuristics.
-* **Dynamic Fuel & Duration Estimations**: Auto-calculates trip distance, optimized waypoint order, driving times, and fuel consumption based on fuel type.
-* **Consolidated Manifests**: Generates structured, print-ready delivery manifests containing sequential stop orders, customer details, and special instructions.
+An enterprise-grade, high-performance fleet registry, driver scheduling, and real-time GPS-simulated route optimization system. Built using Spring Boot 3, Spring WebClient (Reactive OSRM driving matrix integration), STOMP WebSockets, and a React + Vite dashboard displaying interactive delivery paths and analytical Recharts metrics.
 
 ---
 
-## 🛠️ Technology Stack
+## 1. System Architecture & Patterns
 
-* **Backend Engine**: Java 17+, Spring Boot 3, Spring Web, Spring Security (JWT-based stateless auth), Spring Data JPA, PostgreSQL
-* **Frontend Portal**: React 18, Vite, Vanilla CSS with custom glassmorphism design tokens, Lucide React Icons
-* **Testing Suite**: JUnit 5, Mockito, Spring Boot Integration Tests with H2 in-memory DB
-* **DevOps & Infrastructure**: Docker Compose, GitHub Actions CI/CD pipeline
+The platform is designed following **Clean Architecture**, **SOLID Principles**, and **Domain-Driven Design (DDD)** principles to maximize testability, extensibility, and maintainability.
 
----
+```mermaid
+graph TD
+    subgraph Frontend [React + Vite Dashboard]
+        UI[App.jsx Console]
+        Radar[GpsTrackerMap Canvas]
+        Charts[AnalyticsCharts Recharts]
+        Stomp[STOMP WebSocket Client]
+    end
 
-## 🐳 Run With Docker
+    subgraph Backend [Spring Boot Enterprise API]
+        Controller[Controllers: Vehicles/Drivers/Routes/Tasks]
+        Service[Service Layer: Business rules validation]
+        
+        subgraph Optimization [Optimization Package]
+            Strategy[RouteOptimizationStrategy Interface]
+            NN[NearestNeighborStrategy]
+            TwoOpt[TwoOptStrategy]
+            Scoring[RouteScoringSystem]
+        end
 
-```bash
-docker compose up --build
+        subgraph Integration [Reactive External Clients]
+            WebClient[Spring WebClient]
+            OSRM[OSRM Router API]
+        end
+
+        subgraph Realtime [WebSocket & Simulators]
+            WSConfig[WebSocketConfig STOMP Broker]
+            SimScheduler[GpsSimulationScheduler]
+        end
+
+        subgraph Security [Security Layer]
+            JWT[JwtTokenProvider]
+            SecFilter[SecurityConfig WebSecurity]
+        end
+
+        subgraph Central [Centralized Auditing]
+            AuditSvc[AuditService propagation=REQUIRES_NEW]
+        end
+    end
+
+    subgraph Database [Persistence Layer]
+        MySQL[(MySQL database)]
+    end
+
+    UI --> Controller
+    Stomp --> WSConfig
+    Controller --> Service
+    Service --> Strategy
+    Strategy --> NN
+    Strategy --> TwoOpt
+    Service --> Scoring
+    Service --> WebClient
+    WebClient --> OSRM
+    SimScheduler --> taskService
+    SimScheduler --> routeService
+    SimScheduler --> Stomp
+    Service --> AuditSvc
+    Service --> MySQL
+    AuditSvc --> MySQL
 ```
 
-Then open:
-
-- **Frontend Portal**: `http://localhost:3000`
-- **Backend API**: `http://localhost:8080`
-- **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`
-
-### Seed Accounts (For Instant Testing)
-
-- **Admin**: `admin` / `admin123`
-- **Operator**: `operator` / `operator123`
+### Key Design Patterns & Upgrades:
+1. **Strategy Pattern for Routing**: All TSP optimization calculations are extracted from the core service into a modular `RouteOptimizationStrategy` package, allowing pluggable execution of `NearestNeighborStrategy` and `TwoOptStrategy`.
+2. **Dynamic Route Scoring System**: An evaluator (`RouteScoringSystem`) computes scores (0-100) based on weighted distance constraints, vehicle fuel consumption limits, driver shift boundaries, and simulated real-time traffic stress parameters.
+3. **Reactive WebClient Port**: Fully migrated from old `RestTemplate` to modern, non-blocking Spring `WebClient`, supporting customizable timeouts and high-accuracy Haversine Fallback formulas in case OSRM is unreachable.
+4. **STOMP WebSocket Real-Time Tracker**: Uses SockJS + STOMP WebSocket broker to broadcast real-time vehicle positions. An automated `GpsSimulationScheduler` tick interpolates positions and automates package states live.
+5. **Propagation-Independent Auditing**: Logs critical security and operations events into the MySQL `audit_logs` table under an isolated `Propagation.REQUIRES_NEW` transaction scope.
 
 ---
 
-## 💻 Run Locally
+## 2. Technology Stack
 
-### Backend Requirements (Java 17+ and Maven)
+* **Backend**: Java 17, Spring Boot 3.3.5, Spring Security, Spring Data JPA, Spring WebFlux (`WebClient`), Spring WebSocket.
+* **Database**: MySQL 8.0.
+* **Frontend**: React 19, Vite, Recharts, STOMPjs, SockJS-client, TailwindCSS layout, Lucide icons.
+* **Testing**: JUnit 5, Mockito, AssertJ.
+* **CI/CD & DevOps**: GitHub Actions, Docker, Docker Compose, Nginx.
 
+---
+
+## 3. Database Schema & ERD
+
+The backend utilizes Spring Data JPA with the following schema:
+
+```mermaid
+erDiagram
+    vehicles {
+        Long id PK
+        String license_plate UK
+        String make
+        String model
+        Integer year
+        Double capacity_kg
+        Double capacity_volume_cbm
+        String fuel_type
+        Double current_odometer_km
+        String maintenance_status
+        Double current_latitude
+        Double current_longitude
+    }
+    drivers {
+        Long id PK
+        String name
+        String contact_number
+        String email
+        String license_number UK
+        Instant license_expiry
+        LocalTime shift_start
+        LocalTime shift_end
+        String status
+        Long assigned_vehicle_id FK
+    }
+    routes {
+        Long id PK
+        String route_name UK
+        Long vehicle_id FK
+        Long driver_id FK
+        String status
+        Double total_distance_km
+        Integer estimated_duration_minutes
+        Double total_fuel_estimate_liters
+        Double route_score
+        Double start_latitude
+        Double start_longitude
+        String optimized_waypoint_order
+    }
+    delivery_tasks {
+        Long id PK
+        String delivery_address
+        String recipient_name
+        String recipient_phone
+        Double latitude
+        Double longitude
+        Double package_weight_kg
+        Double package_volume_cbm
+        String delivery_status
+        Instant time_window_start
+        Instant time_window_end
+        Instant actual_delivery_time
+        Long route_id FK
+        Integer sequence_index
+    }
+    audit_logs {
+        Long id PK
+        String action
+        String performed_by
+        String details
+        Instant timestamp
+    }
+
+    vehicles ||--o| drivers : "assigned to"
+    vehicles ||--o{ routes : "assigned"
+    drivers ||--o{ routes : "navigates"
+    routes ||--o{ delivery_tasks : "contains"
+```
+
+---
+
+## 4. API Documentation: Searching, Filtering, and Pagination
+
+All core query endpoints support database-level sorting, searching, filtering, and page limit offsets:
+
+### Get Vehicles
+`GET /api/vehicles?page=0&size=10&status=OPERATIONAL&search=Tata`
+* **Query Params**:
+  * `page`: Page index (default: 0)
+  * `size`: Page size limit (default: 50)
+  * `status`: Filter by `OPERATIONAL`, `IN_MAINTENANCE`, `SCHEDULED_MAINTENANCE`
+  * `search`: Matches make, model, or plate keywords.
+
+### Get Drivers
+`GET /api/drivers?page=0&size=10&status=AVAILABLE&search=Ramesh`
+* **Query Params**:
+  * `status`: Filter by `AVAILABLE`, `ON_ROUTE`
+  * `search`: Matches name, email, or license.
+
+### Get Routes
+`GET /api/routes?page=0&size=10&status=ACTIVE&search=RT`
+
+---
+
+## 5. Local Setup & Execution
+
+### Prerequisites
+* JDK 17
+* Node.js 20+
+* MySQL Server (or Docker running)
+
+### Running Database (MySQL)
+Create the database:
+```sql
+CREATE DATABASE IF NOT EXISTS fleet_db;
+```
+
+### Starting Spring Boot Backend
+Configure environment variables or default values in `backend/src/main/resources/application.yml`.
 ```bash
 cd backend
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev"
 ```
+* Backend starts at `http://localhost:8082`
+* Swagger OpenAPI: `http://localhost:8082/swagger-ui/index.html`
 
-### Frontend Requirements (Node 22+)
-
+### Starting React Vite Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+* Open the browser at `http://localhost:5173/`
 
-The Vite dev server proxies `/api` to `http://localhost:8080`.
+---
 
-For this Windows workspace, portable Java/Maven can also be placed under `.tools` and started with the helper scripts:
+## 6. Docker Deployment
 
+Deploy the entire stack with a single command:
 ```bash
-scripts\run-backend-local.cmd
-scripts\run-frontend-local.cmd
+docker-compose up --build -d
+```
+This starts:
+1. `fleet-db` (MySQL on port 3306)
+2. `fleet-backend` (Spring Boot API on port 8082)
+3. `fleet-frontend` (Nginx serving React build on port 80)
+
+---
+
+## 7. Testing Instructions
+
+Run backend mock unit tests verifying business validation limits and strategy transitions:
+```bash
+cd backend
+mvn clean test
 ```
 
-The helper backend script uses the `local` profile, PostgreSQL database `wms`, and backend port `8081`. The frontend helper points Vite to `http://localhost:8081/api`.
+### Test Coverage Highlights:
+* **RouteOptimizationServiceTest**: Stubbing pluggable strategy patterns, scoring systems, OSRM coordinate arrays, weight capacity boundaries, shift checks, and planned routes.
+* **DriverServiceTest**: Checks license expirations, duty shift intervals, and vehicle assignment constraints.
+* **VehicleServiceTest**: Verifies model-year constraints, maintenance updates, and operational boundaries.
+* **DeliveryTaskServiceTest**: Tests delivery state validation (`UNASSIGNED` -> `DISPATCHED` -> `IN_TRANSIT` -> `DELIVERED`).
+* **AuthenticationTest**: Asserts JWT issuer identity and role claim allocations.
 
 ---
 
-## ⚙️ Environment Configuration
+## 8. Continuous Integration / CD
 
-Copy `.env.example` to `.env` for Docker usage and replace the JWT secret before sharing or deploying.
-
-Required production values:
-
-- `DB_URL`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `WMS_JWT_SECRET`
-- `JWT_EXPIRES_MINUTES`
-
----
-
-## 🔄 API Flow
-
-1. **Login**: Login with `POST /api/auth/login` to obtain JWT.
-2. **Register Admin**: `POST /api/auth/register` creates an administrator account and auto-provisions a new Warehouse.
-3. **Manage Operators**: Admin creates operators with `POST /api/users` (scoped to warehouse).
-4. **Create Products**: Create products with `POST /api/products` (QR code auto-generated).
-5. **Receive Stock**: Receive inbound stock with `POST /api/inventory/receive` (atomically puts away to bins).
-6. **Create Orders**: Create orders with `POST /api/orders`.
-7. **Fulfill Orders**: Move orders through `/start-picking`, `/pack`, and `/ship` (updates ledger and decrements stock).
-8. **View Audit Logs**: View secured logs with `GET /api/audit-logs`.
-
-Example HTTP requests are documented in `docs/api.http`.
-
----
-
-## 📋 PDF Requirement Alignment
-
-* **Project Scope**: Project 1, Enterprise Warehouse Management System.
-* **Warehouse Model**: `Warehouse -> Zone -> Aisle -> StorageBin`.
-* **Core Entities**: `Product`, `Warehouse`, `StorageBin`, `InventoryItem`, orders, users, suppliers, product categories, and purchase orders.
-* **Receiving and Putaway**: Transactional service assigns inbound stock to bins with available capacity.
-* **Inventory Integrity**: Pessimistic write locks and `@Transactional` methods protect stock changes.
-* **Barcode/QR Support**: ZXing generates QR images for product SKUs.
-* **Fulfillment**: Orders move through `PENDING -> PICKING -> PACKED -> SHIPPED`; packing decrements stock and raises `InsufficientStockException` when stock is unavailable.
-* **Security**: Spring Security with JWT and role-based `ADMIN` / `OPERATOR` access.
-* **Frontend**: Redesigned glassmorphic React dashboard consumes the Spring Boot REST APIs.
-* **Database**: PostgreSQL for local and Docker runtime; H2 is used only by automated tests.
-* **CI/CD**: GitHub Actions runs backend tests and frontend production build.
-* **Multi-Tenant Isolation**: Complete logical tenant isolation based on user's associated Warehouse context.
-* **User Management**: Administrative capability to register and manage operators per warehouse.
-* **Audit Logging**: Real-time, tenant-isolated transactional audit trail for absolute transparency.
-* **Fleet Management**: Fully featured fleet vehicle registry, driver shift planning, and task delivery assignments.
-* **Route Optimization**: Algorithmic route optimization engine integrating OSRM table/route APIs with TSP heuristic, reducing driving time and estimating fuel needs.
-
----
-
-## ⚡ Response Time & Performance Check
-
-The PDF target specifies that API response times should remain below 200 ms for scanning workflows. With the backend running, use this helper to take a quick local measurement:
-
-```powershell
-.\scripts\check-api-performance.ps1 -BaseUrl http://localhost:8081 -Iterations 10
-```
-
-The script logs in with the seeded admin account, calls common API endpoints, and reports average/max response time with a pass/fail status against the 200 ms target.
-
+We use **GitHub Actions** for Automated CI/CD. The configuration is defined at [ci.yml](file:///.github/workflows/ci.yml):
+1. **Backend Job**: Sets up JDK 17, downloads Maven packages, compiles all source classes, and executes 100% of unit tests.
+2. **Frontend Job**: Sets up Node.js 20, installs dependencies via npm, and runs `npm run build` to validate Vite compilation.
+3. **Docker Validation**: Evaluates Docker compose configuration parameters.

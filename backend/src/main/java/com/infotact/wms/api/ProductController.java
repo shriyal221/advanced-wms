@@ -39,6 +39,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{id}/barcode", produces = MediaType.IMAGE_PNG_VALUE)
+    @SuppressWarnings("null")
     public ResponseEntity<byte[]> barcode(@PathVariable Long id) {
         return ResponseEntity.ok()
             .contentType(MediaType.IMAGE_PNG)

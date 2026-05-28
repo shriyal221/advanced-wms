@@ -102,6 +102,14 @@ public class AppUser {
         return warehouse;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
     public void updateProfile(String name, String email, String contactNumber, Role role, String status, Warehouse warehouse) {
         this.name = name;
         this.email = email;
