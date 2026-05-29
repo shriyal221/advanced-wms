@@ -190,7 +190,7 @@ def add_cover(doc):
     meta_rows = [
         ("Project Type", "Web Application"),
         ("Domain", "Logistics, Warehouse, Inventory and Supply Chain Management"),
-        ("Backend", "Java 17+, Spring Boot 3, Spring Data JPA, Spring Security JWT"),
+        ("Backend", "Java 21+, Spring Boot 3, Spring Data JPA, Spring Security JWT"),
         ("Frontend", "React.js with Vite"),
         ("Database", "PostgreSQL"),
         ("Prepared For", "Infotact Technical Internship Program"),

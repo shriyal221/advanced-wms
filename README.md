@@ -1,7 +1,7 @@
 # Fleet Management and Route Optimization Engine
 
 [![Continuous Integration](https://github.com/shriyal221/advanced-wms/actions/workflows/ci.yml/badge.svg)](https://github.com/shriyal221/advanced-wms/actions/workflows/ci.yml)
-[![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
 [![Spring Boot 3.3.5](https://img.shields.io/badge/Spring%20Boot-3.3.5-green.svg)](https://spring.io/projects/spring-boot)
 [![Vite](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-blue.svg)](https://vitejs.dev)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-cyan.svg)](https://www.docker.com/)
@@ -86,7 +86,7 @@ graph TD
 
 ## 2. Technology Stack
 
-* **Backend**: Java 17, Spring Boot 3.3.5, Spring Security, Spring Data JPA, Spring WebFlux (`WebClient`), Spring WebSocket.
+* **Backend**: Java 21, Spring Boot 3.3.5, Spring Security, Spring Data JPA, Spring WebFlux (`WebClient`), Spring WebSocket.
 * **Database**: MySQL 8.0.
 * **Frontend**: React 19, Vite, Recharts, STOMPjs, SockJS-client, TailwindCSS layout, Lucide icons.
 * **Testing**: JUnit 5, Mockito, AssertJ.
@@ -198,7 +198,7 @@ All core query endpoints support database-level sorting, searching, filtering, a
 ## 5. Local Setup & Execution
 
 ### Prerequisites
-* JDK 17
+* JDK 21
 * Node.js 20+
 * MySQL Server (or Docker running)
 
@@ -260,6 +260,6 @@ mvn clean test
 ## 8. Continuous Integration / CD
 
 We use **GitHub Actions** for Automated CI/CD. The configuration is defined at [ci.yml](file:///.github/workflows/ci.yml):
-1. **Backend Job**: Sets up JDK 17, downloads Maven packages, compiles all source classes, and executes 100% of unit tests.
+1. **Backend Job**: Sets up JDK 21, downloads Maven packages, compiles all source classes, and executes 100% of unit tests.
 2. **Frontend Job**: Sets up Node.js 20, installs dependencies via npm, and runs `npm run build` to validate Vite compilation.
 3. **Docker Validation**: Evaluates Docker compose configuration parameters.
