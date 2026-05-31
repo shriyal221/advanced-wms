@@ -3,16 +3,16 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/wms}
-    username: ${DB_USERNAME:wms}
-    password: ${DB_PASSWORD:wms}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:wmsdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: password
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: update
   h2:
     console:
-      enabled: false
+      enabled: true
       path: /h2-console
 
 security:
