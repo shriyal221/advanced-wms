@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@SuppressWarnings("null")
 class InventoryServiceTest {
     @Autowired
     private InventoryService inventoryService;

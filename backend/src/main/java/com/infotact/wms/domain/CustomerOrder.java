@@ -85,6 +85,14 @@ public class CustomerOrder {
         return warehouse;
     }
 
+    public Instant getPackedAt() {
+        return packedAt;
+    }
+
+    public Instant getShippedAt() {
+        return shippedAt;
+    }
+
     public List<CustomerOrderLine> getLines() {
         return lines;
     }

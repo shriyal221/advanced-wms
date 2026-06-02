@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface StorageBinRepository extends JpaRepository<StorageBin, Long> {
     boolean existsByCode(String code);
+    Optional<StorageBin> findByCode(String code);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

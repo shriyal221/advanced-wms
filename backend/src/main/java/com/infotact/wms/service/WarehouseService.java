@@ -20,7 +20,6 @@ import com.infotact.wms.repository.WarehouseRepository;
 import com.infotact.wms.repository.ZoneRepository;
 import com.infotact.wms.repository.AppUserRepository;
 import com.infotact.wms.domain.AppUser;
-import com.infotact.wms.domain.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
@@ -29,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@SuppressWarnings("null")
 public class WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final ZoneRepository zoneRepository;

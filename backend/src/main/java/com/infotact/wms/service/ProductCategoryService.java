@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@SuppressWarnings("null")
 public class ProductCategoryService {
     private final ProductCategoryRepository categoryRepository;
     private final WarehouseRepository warehouseRepository;

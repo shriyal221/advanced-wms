@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@SuppressWarnings("null")
 public class UserService {
     private final AppUserRepository appUserRepository;
     private final WarehouseRepository warehouseRepository;
