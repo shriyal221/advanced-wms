@@ -20,6 +20,14 @@ import com.infotact.wms.repository.StorageBinRepository;
 import com.infotact.wms.repository.SupplierRepository;
 import com.infotact.wms.repository.WarehouseRepository;
 import com.infotact.wms.repository.ZoneRepository;
+import com.infotact.wms.domain.CustomerOrder;
+import com.infotact.wms.domain.CustomerOrderLine;
+import com.infotact.wms.domain.InventoryItem;
+import com.infotact.wms.domain.InventoryTransaction;
+import com.infotact.wms.domain.InventoryTransactionType;
+import com.infotact.wms.repository.CustomerOrderRepository;
+import com.infotact.wms.repository.InventoryItemRepository;
+import com.infotact.wms.repository.InventoryTransactionRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -42,6 +50,9 @@ public class DataSeeder {
         ProductCategoryRepository productCategoryRepository,
         SupplierRepository supplierRepository,
         PurchaseOrderRepository purchaseOrderRepository,
+        InventoryItemRepository inventoryItemRepository,
+        InventoryTransactionRepository inventoryTransactionRepository,
+        CustomerOrderRepository customerOrderRepository,
         PasswordEncoder passwordEncoder,
         @Value("${seed.admin-password}") String adminPassword,
         @Value("${seed.operator-password}") String operatorPassword
@@ -212,6 +223,61 @@ public class DataSeeder {
                 po2.addItem(new PurchaseOrderItem(labels, 1000));
                 po2.markReceived();
                 purchaseOrderRepository.save(po2);
+            }
+
+            // Seed 5 Inventory Items & Transactions
+            if (inventoryItemRepository.count() == 0) {
+                Product p1 = productRepository.findBySku("SKU-TK-100").orElseThrow();
+                Product p2 = productRepository.findBySku("SKU-PR-500").orElseThrow();
+                Product p3 = productRepository.findBySku("SKU-EF-1000").orElseThrow();
+                Product p4 = productRepository.findBySku("SKU-SG-200").orElseThrow();
+                Product p5 = productRepository.findBySku("SKU-AC-50").orElseThrow();
+
+                StorageBin bin1 = storageBinRepository.findByCode("BIN-A01-001").orElseThrow();
+                StorageBin bin2 = storageBinRepository.findByCode("BIN-A01-002").orElseThrow();
+                StorageBin bin3 = storageBinRepository.findByCode("BIN-A02-001").orElseThrow();
+
+                inventoryItemRepository.save(new InventoryItem(p1, bin1, 150));
+                inventoryItemRepository.save(new InventoryItem(p2, bin2, 20));
+                inventoryItemRepository.save(new InventoryItem(p3, bin3, 5));
+                inventoryItemRepository.save(new InventoryItem(p4, bin1, 200));
+                inventoryItemRepository.save(new InventoryItem(p5, bin2, 45));
+
+                inventoryTransactionRepository.save(new InventoryTransaction(InventoryTransactionType.RECEIVE, p1, bin1, 150, "Initial Stock"));
+                inventoryTransactionRepository.save(new InventoryTransaction(InventoryTransactionType.RECEIVE, p2, bin2, 20, "Initial Stock"));
+                inventoryTransactionRepository.save(new InventoryTransaction(InventoryTransactionType.RECEIVE, p3, bin3, 5, "Initial Stock"));
+                inventoryTransactionRepository.save(new InventoryTransaction(InventoryTransactionType.RECEIVE, p4, bin1, 200, "Initial Stock"));
+                inventoryTransactionRepository.save(new InventoryTransaction(InventoryTransactionType.RECEIVE, p5, bin2, 45, "Initial Stock"));
+            }
+
+            // Seed 5 Customer Orders
+            if (customerOrderRepository.count() == 0) {
+                Product p1 = productRepository.findBySku("SKU-TK-100").orElseThrow();
+                Product p2 = productRepository.findBySku("SKU-PR-500").orElseThrow();
+                Product p3 = productRepository.findBySku("SKU-EF-1000").orElseThrow();
+                Product p4 = productRepository.findBySku("SKU-SG-200").orElseThrow();
+
+                CustomerOrder o1 = new CustomerOrder("ORD-001", warehouse, Instant.now().plus(1, ChronoUnit.DAYS));
+                o1.addLine(new CustomerOrderLine(p1, 10));
+                customerOrderRepository.save(o1);
+
+                CustomerOrder o2 = new CustomerOrder("ORD-002", warehouse, Instant.now().plus(2, ChronoUnit.DAYS));
+                o2.addLine(new CustomerOrderLine(p2, 2));
+                o2.addLine(new CustomerOrderLine(p4, 50));
+                customerOrderRepository.save(o2);
+
+                CustomerOrder o3 = new CustomerOrder("ORD-003", warehouse, Instant.now().plus(3, ChronoUnit.DAYS));
+                o3.addLine(new CustomerOrderLine(p3, 1));
+                customerOrderRepository.save(o3);
+
+                CustomerOrder o4 = new CustomerOrder("ORD-004", warehouse, Instant.now().plus(4, ChronoUnit.DAYS));
+                o4.addLine(new CustomerOrderLine(p1, 5));
+                customerOrderRepository.save(o4);
+
+                CustomerOrder o5 = new CustomerOrder("ORD-005", warehouse, Instant.now().plus(5, ChronoUnit.DAYS));
+                o5.addLine(new CustomerOrderLine(p4, 20));
+                o5.addLine(new CustomerOrderLine(p2, 1));
+                customerOrderRepository.save(o5);
             }
         };
     }
