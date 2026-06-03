@@ -195,31 +195,11 @@ public class DataSeeder {
             if (!supplierRepository.existsByNameIgnoreCase("Infotact Supply Co.")) {
                 supplierRepository.save(new Supplier("Infotact Supply Co.", "Bengaluru, Karnataka", "supply@infotact.local", "+91 90000 00003"));
             }
-            if (!supplierRepository.existsByNameIgnoreCase("Global Logistics Providers")) {
-                supplierRepository.save(new Supplier("Global Logistics Providers", "Mumbai, Maharashtra", "contact@globallogistics.local", "+91 90000 00006"));
-            }
-            if (!supplierRepository.existsByNameIgnoreCase("National Packaging Systems")) {
-                supplierRepository.save(new Supplier("National Packaging Systems", "Delhi, NCR", "sales@nationalpkg.local", "+91 90000 00007"));
-            }
-            if (!supplierRepository.existsByNameIgnoreCase("Industrial Equipments Ltd")) {
-                supplierRepository.save(new Supplier("Industrial Equipments Ltd", "Chennai, Tamil Nadu", "info@industrialequip.local", "+91 90000 00008"));
-            }
-            if (!supplierRepository.existsByNameIgnoreCase("Safety Gear Pros")) {
-                supplierRepository.save(new Supplier("Safety Gear Pros", "Pune, Maharashtra", "support@safetygear.local", "+91 90000 00009"));
-            }
-            if (!supplierRepository.existsByNameIgnoreCase("Prime Materials Corp")) {
-                supplierRepository.save(new Supplier("Prime Materials Corp", "Hyderabad, Telangana", "hello@primematerials.local", "+91 90000 00010"));
-            }
 
-            if (purchaseOrderRepository.count() < 7) {
+            if (purchaseOrderRepository.count() == 0) {
                 Supplier supplier = supplierRepository.findAll().get(0);
-                Supplier supplier2 = supplierRepository.findAll().get(1);
-                Supplier supplier3 = supplierRepository.findAll().get(2);
                 Product labels = productRepository.findBySku("SKU-LABEL-100").orElseThrow();
                 Product scanners = productRepository.findBySku("SKU-SCANNER-200").orElseThrow();
-                Product palletRack = productRepository.findBySku("SKU-PR-500").orElseThrow();
-                Product safetyGoggles = productRepository.findBySku("SKU-SG-200").orElseThrow();
-                Product hardHat = productRepository.findBySku("SKU-WH-HM-01").orElseThrow();
 
                 // Order 1: Ordered
                 PurchaseOrder po1 = new PurchaseOrder(supplier, warehouse, Instant.now().plus(7, ChronoUnit.DAYS));
@@ -232,34 +212,6 @@ public class DataSeeder {
                 po2.addItem(new PurchaseOrderItem(labels, 1000));
                 po2.markReceived();
                 purchaseOrderRepository.save(po2);
-
-                // Order 3: New Order
-                PurchaseOrder po3 = new PurchaseOrder(supplier2, warehouse, Instant.now().plus(3, ChronoUnit.DAYS));
-                po3.addItem(new PurchaseOrderItem(palletRack, 15));
-                purchaseOrderRepository.save(po3);
-
-                // Order 4: New Received Order
-                PurchaseOrder po4 = new PurchaseOrder(supplier3, warehouse, Instant.now().minus(5, ChronoUnit.DAYS));
-                po4.addItem(new PurchaseOrderItem(safetyGoggles, 100));
-                po4.addItem(new PurchaseOrderItem(hardHat, 50));
-                po4.markReceived();
-                purchaseOrderRepository.save(po4);
-
-                // Order 5: Future Order
-                PurchaseOrder po5 = new PurchaseOrder(supplier2, warehouse, Instant.now().plus(14, ChronoUnit.DAYS));
-                po5.addItem(new PurchaseOrderItem(scanners, 25));
-                purchaseOrderRepository.save(po5);
-
-                // Order 6: Soon
-                PurchaseOrder po6 = new PurchaseOrder(supplier, warehouse, Instant.now().plus(1, ChronoUnit.DAYS));
-                po6.addItem(new PurchaseOrderItem(labels, 2000));
-                purchaseOrderRepository.save(po6);
-
-                // Order 7: Past Received
-                PurchaseOrder po7 = new PurchaseOrder(supplier3, warehouse, Instant.now().minus(10, ChronoUnit.DAYS));
-                po7.addItem(new PurchaseOrderItem(palletRack, 5));
-                po7.markReceived();
-                purchaseOrderRepository.save(po7);
             }
         };
     }
